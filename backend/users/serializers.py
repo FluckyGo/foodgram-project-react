@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from .models import CustomUser
+from recipes.models import Follow
 
 USERNAME_REGEX = r'^[\w.@+-]+$'
 EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -18,9 +19,10 @@ class CustomUserReadSerializer(serializers.ModelSerializer):
                   'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
+        """ Фукция для проверки наличия подписок. """
         user = self.context.get('request').user
-        # if not user.is_anonymous:
-        #    return Follow.objects.filter(user=user, author=obj).exists()
+        if not user.is_anonymous:
+            return Follow.objects.filter(user=user, author=obj).exists()
         return False
 
 

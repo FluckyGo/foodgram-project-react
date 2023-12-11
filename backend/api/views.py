@@ -1,4 +1,9 @@
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, mixins, permissions
+from .serializers import FollowSerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -11,3 +16,28 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class IngredientViewSet(viewsets.ModelViewSet):
     ...
+
+
+class FollowViewSet(mixins.CreateModelMixin,
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
+
+    serializer_class = FollowSerializer
+    # filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('user', 'following')
+    search_fields = ('user__username', 'following__username')
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = get_object_or_404(User, username=self.request.user.username)
+        return user.follower.all()
+
+    def perform_create(self, serializer):
+
+        following_user = get_object_or_404(
+            User, username=self.request.data.get('following'))
+
+        serializer.save(
+            user=self.request.user,
+            following=following_user
+        )
