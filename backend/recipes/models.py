@@ -1,5 +1,5 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -33,13 +33,13 @@ class Ingredient(models.Model):
     """ Модель ингридиентов. """
     name = models.CharField(
         'Название ингридиента',
-        max_length=150,
+        max_length=200,
         db_index=True
     )
 
     measurement_unit = models.CharField(
         'Единицы измерения',
-        max_length=50
+        max_length=200
     )
 
     class Meta:
@@ -49,7 +49,46 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """ Модель рецептов. """
-    ...
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name='Автор рецепта')
+
+    name = models.CharField('Название рецепта', max_length=200, db_index=True)
+    image = models.ImageField('Изображение блюда', upload_to='media/')
+    text = models.TextField('Описание рецепта')
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    ingredients = models.ManyToManyField(
+        Ingredient, verbose_name='Ингридиенты', through='RecipeIngredient')
+
+    tags = models.ManyToManyField(Tag, verbose_name='Тег')
+    cooking_time = models.PositiveSmallIntegerField('Время готовки')
+
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
+        default_related_name = 'recipe'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'author'),
+                name='unique_recipes')
+        ]
+
+
+class RecipeIngredient(models.Model):
+    """ Ингридиенты для использования в рецепте. """
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, verbose_name='Название рецепта')
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, verbose_name='Ингредиент рецепта')
+    amount = models.PositiveSmallIntegerField('Количество ингредиента')
+
+    class Meta:
+        verbose_name = 'Ингридиенты для рецепта'
+        verbose_name_plural = 'Ингридиенты для рецепта'
+
+        def __str__(self) -> str:
+            return f'{self.ingredient} -- {self.amount}'
 
 
 class Follow(models.Model):

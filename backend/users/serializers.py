@@ -34,11 +34,14 @@ class CustomUserWriteSerializer(serializers.ModelSerializer):
         validators=[RegexValidator(regex=EMAIL_REGEX,)]
     )
     username = serializers.CharField(
+        max_length=150,
         required=True,
         validators=[RegexValidator(regex=USERNAME_REGEX,)]
     )
-    first_name = serializers.CharField(required=True,)
-    last_name = serializers.CharField(required=True,)
+    first_name = serializers.CharField(max_length=150, required=True,)
+    last_name = serializers.CharField(max_length=150, required=True,)
+    password = serializers.CharField(
+        max_length=150, required=True, write_only=True)
 
     class Meta:
         model = CustomUser
