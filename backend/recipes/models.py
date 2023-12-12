@@ -6,7 +6,27 @@ User = get_user_model()
 
 class Tag(models.Model):
     """ Модель тегов. """
-    ...
+    ORANGE = '#FFA500'
+    AQUA = '#00FFFF'
+    INDIGO = '#4B0082'
+
+    COLOR_SET = [
+        (ORANGE, 'Оранжевый'),
+        (AQUA, 'Бирюзовый'),
+        (INDIGO, 'Синий'),
+    ]
+
+    name = models.CharField('Наименование тега', max_length=200, unique=True)
+    color = models.CharField('Цвет тега', max_length=7,
+                             choices=COLOR_SET, default=ORANGE, unique=True)
+    slug = models.SlugField('Слаг тега', max_length=200, unique=True)
+
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -28,7 +48,7 @@ class Ingredient(models.Model):
 
 
 class Recipes(models.Model):
-    ...
+    """ Модель рецептов. """
 
 
 class Follow(models.Model):
