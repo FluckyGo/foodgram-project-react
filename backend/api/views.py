@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, permissions, filters
 from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth import get_user_model
-from .serializers import FollowSerializer, TagSerializer, IngredientSerializer
+from .serializers import FollowSerializer, TagSerializer, IngredientSerializer, RecipeSerializer
 from recipes.models import Tag, Recipe, Ingredient
 
 User = get_user_model()
@@ -10,6 +10,8 @@ User = get_user_model()
 
 class RecipeViewSet(viewsets.ModelViewSet):
     ...
+    # queryset = Recipe.objects.all()
+    # serializer_class = RecipeSerializer
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

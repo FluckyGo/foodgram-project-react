@@ -131,3 +131,4 @@ dmypy.json
 # .idea
 .idea
 backend/recipes/migrations/0004_auto_20231212_1638.py
+backend/recipes/migrations/0005_auto_20231212_2357.py

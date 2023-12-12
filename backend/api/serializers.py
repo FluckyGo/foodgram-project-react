@@ -3,7 +3,8 @@ from rest_framework import serializers, status, validators
 from rest_framework.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
-from recipes.models import Follow, Tag, Ingredient
+from recipes.models import (Follow, Tag, Ingredient, Recipe,
+                            RecipeIngredient, Favorite, ShoppingCart)
 
 User = get_user_model()
 
@@ -22,6 +23,12 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'color', 'slug',)
         read_only_fields = ('name', 'color', 'slug',)
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = '__all__'
 
 
 class FollowSerializer(serializers.ModelSerializer):
