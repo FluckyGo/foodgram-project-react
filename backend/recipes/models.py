@@ -91,6 +91,21 @@ class RecipeIngredient(models.Model):
             return f'{self.ingredient} -- {self.amount}'
 
 
+class ShoppingCart(models.Model):
+    """ Список покупок. """
+    customer = models.ForeignKey(
+        User, verbose_name='Покупатель', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, verbose_name='Рецепт блюда', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
+
+    def __str__(self) -> str:
+        return self.recipe
+
+
 class Follow(models.Model):
     """ Модель подписок. """
     user = models.ForeignKey(
