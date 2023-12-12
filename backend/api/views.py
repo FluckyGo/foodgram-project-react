@@ -18,9 +18,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     ...
 
 
-class FollowViewSet(mixins.CreateModelMixin,
-                    mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class FollowViewSet(viewsets.ModelViewSet):
 
     serializer_class = FollowSerializer
     # filter_backends = (DjangoFilterBackend, filters.SearchFilter)

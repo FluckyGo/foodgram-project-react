@@ -4,7 +4,35 @@ from django.db import models
 User = get_user_model()
 
 
+class Tag(models.Model):
+    """ Модель тегов. """
+    ...
+
+
+class Ingredient(models.Model):
+    """ Модель ингридиентов. """
+    name = models.CharField(
+        'Название ингридиента',
+        max_length=150,
+        db_index=True
+    )
+
+    measurement_unit = models.CharField(
+        'Единицы измерения',
+        max_length=50
+    )
+
+    class Meta:
+        verbose_name = 'Ингридиент'
+        verbose_name_plural = 'Ингридиенты'
+
+
+class Recipes(models.Model):
+    ...
+
+
 class Follow(models.Model):
+    """ Модель подписок. """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

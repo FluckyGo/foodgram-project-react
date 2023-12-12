@@ -1,5 +1,24 @@
 from django.contrib import admin
-from .models import Follow
+from .models import Follow, Ingredient
+
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
+
+
+class IngredientResource(resources.ModelResource):
+    """Ресурс для экспорта и импорта ингридиентов."""
+
+    class Meta:
+        model = Ingredient
+
+
+@admin.register(Ingredient)
+class IngredientAdmin(ImportExportModelAdmin):
+    """Администратор для модели Ingredient."""
+    resource_classes = [IngredientResource]
+    list_display = ('name', 'measurement_unit')
+    search_fields = ('name', 'measurement_unit')
+    list_display_links = ('name',)
 
 
 @admin.register(Follow)
