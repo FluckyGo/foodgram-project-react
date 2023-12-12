@@ -47,8 +47,9 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингридиенты'
 
 
-class Recipes(models.Model):
+class Recipe(models.Model):
     """ Модель рецептов. """
+    ...
 
 
 class Follow(models.Model):

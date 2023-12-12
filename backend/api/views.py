@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins, permissions
+from rest_framework import viewsets, mixins, permissions, filters
 from django.contrib.auth import get_user_model
-from .serializers import FollowSerializer, TagSerializer
-from recipes.models import Tag
+from .serializers import FollowSerializer, TagSerializer, IngredientSerializer
+from recipes.models import Tag, Recipe, Ingredient
 
 User = get_user_model()
 
@@ -18,7 +18,11 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
-    ...
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    filter_backends = (filters.SearchFilter,)
+    permission_classes = (permissions.AllowAny,)
+    search_fields = ('^name',)
 
 
 class FollowViewSet(viewsets.ModelViewSet):
