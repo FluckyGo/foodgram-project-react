@@ -80,7 +80,8 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, verbose_name='Название рецепта')
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE, verbose_name='Ингредиент рецепта')
+        Ingredient, on_delete=models.CASCADE,
+        verbose_name='Ингредиент рецепта')
     amount = models.PositiveSmallIntegerField('Количество ингредиента')
 
     class Meta:
@@ -119,26 +120,3 @@ class Favorite(models.Model):
 
     def __str__(self) -> str:
         return self.recipe
-
-
-class Follow(models.Model):
-    """ Модель подписок. """
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Пользователь',
-    )
-    following = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='followings',
-        verbose_name='Подписан'
-    )
-
-    def __str__(self):
-        return f'{self.user.username} подписан на {self.following.username}'
-
-    class Meta:
-        verbose_name = 'Подписчик'
-        verbose_name_plural = 'Подписчики'

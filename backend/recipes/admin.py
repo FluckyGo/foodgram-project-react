@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Follow, Ingredient, Tag
+from .models import Ingredient, Tag
 
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
@@ -29,19 +29,3 @@ class IngredientAdmin(ImportExportModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name', 'measurement_unit')
     list_display_links = ('name',)
-
-
-@admin.register(Follow)
-class FollowAdmin(admin.ModelAdmin):
-    """Админ-зона подписчиков. """
-    list_display = ('user', 'following',)
-    search_fields = ('user__username', 'following__username',)
-    list_filter = ('user__username', 'following__username',)
-
-    def user(self, obj):
-        return obj.user.username
-    user.short_description = 'Пользователь'
-
-    def following(self, obj):
-        return obj.following.username
-    following.short_description = 'Подписчик'
