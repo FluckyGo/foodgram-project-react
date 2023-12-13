@@ -3,7 +3,7 @@ from rest_framework import viewsets, mixins, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth import get_user_model
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer
+from .serializers import TagSerializer, IngredientSerializer, RecipeReadSerializer, RecipeWriteSerializer
 from recipes.models import Tag, Recipe, Ingredient
 from .pagination import FoodgramPagination
 
@@ -25,9 +25,13 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.filter(author=1)
-    serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
     pagination_class = FoodgramPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
     @action(detail=True,
             methods=['post', 'delete'],

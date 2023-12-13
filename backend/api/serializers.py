@@ -22,14 +22,16 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit',)
-        read_only_fields = ('name', 'measurement_unit',)
+        read_only_fields = ('id', 'name', 'measurement_unit',)
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    ''' Сериализатор для модели Рецепт-Ингредиент. '''
+    ingredient = IngredientSerializer(read_only=True)
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
+        fields = ('ingredient', 'amount')
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -44,7 +46,13 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ('author')
+        fields = ('__all__')
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('__all__')
