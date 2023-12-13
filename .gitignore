@@ -134,3 +134,6 @@ backend/recipes/migrations/0004_auto_20231212_1638.py
 backend/recipes/migrations/0005_auto_20231212_2357.py
 backend/recipes/migrations/0006_delete_follow.py
 backend/followers/migrations/0001_initial.py
+backend/recipes/migrations/0007_alter_recipeingredient_options.py
+backend/recipes/migrations/0008_recipeingredient_measurement_unit.py
+backend/recipes/migrations/0009_remove_recipeingredient_measurement_unit.py

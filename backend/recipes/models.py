@@ -46,6 +46,9 @@ class Ingredient(models.Model):
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Ингридиенты'
 
+    def __str__(self) -> str:
+        return f'{self.name}, {self.measurement_unit}'
+
 
 class Recipe(models.Model):
     """ Модель рецептов. """
@@ -57,10 +60,11 @@ class Recipe(models.Model):
     text = models.TextField('Описание рецепта')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
+    tags = models.ManyToManyField(Tag, verbose_name='Тег')
+
     ingredients = models.ManyToManyField(
         Ingredient, verbose_name='Ингридиенты', through='RecipeIngredient')
 
-    tags = models.ManyToManyField(Tag, verbose_name='Тег')
     cooking_time = models.PositiveSmallIntegerField('Время готовки')
 
     class Meta:
@@ -74,6 +78,9 @@ class Recipe(models.Model):
                 name='unique_recipes')
         ]
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class RecipeIngredient(models.Model):
     """ Ингридиенты для использования в рецепте. """
@@ -85,11 +92,11 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField('Количество ингредиента')
 
     class Meta:
-        verbose_name = 'Ингридиенты для рецепта'
+        verbose_name = 'Ингридиент для рецепта'
         verbose_name_plural = 'Ингридиенты для рецепта'
 
         def __str__(self) -> str:
-            return f'{self.ingredient} -- {self.amount}'
+            return f'{self.ingredient.name} -- {self.amount}'
 
 
 class ShoppingCart(models.Model):
@@ -104,7 +111,7 @@ class ShoppingCart(models.Model):
         verbose_name_plural = 'Список покупок'
 
     def __str__(self) -> str:
-        return self.recipe
+        return self.recipe.name
 
 
 class Favorite(models.Model):
@@ -119,4 +126,4 @@ class Favorite(models.Model):
         verbose_name_plural = 'Любимые рецепты'
 
     def __str__(self) -> str:
-        return self.recipe
+        return self.recipe.name
