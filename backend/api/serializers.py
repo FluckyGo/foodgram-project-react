@@ -9,14 +9,6 @@ from recipes.models import (Tag, Ingredient, Recipe,
 User = get_user_model()
 
 
-class IngredientSerializer(serializers.ModelSerializer):
-    """ Сериализатор ингридиентов. """
-    class Meta:
-        model = Ingredient
-        fields = ('id', 'name', 'measurement_unit',)
-        read_only_fields = ('name', 'measurement_unit',)
-
-
 class TagSerializer(serializers.ModelSerializer):
     """ Сериализатор тега. """
     class Meta:
@@ -25,7 +17,34 @@ class TagSerializer(serializers.ModelSerializer):
         read_only_fields = ('name', 'color', 'slug',)
 
 
+class IngredientSerializer(serializers.ModelSerializer):
+    """ Сериализатор ингридиентов. """
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit',)
+        read_only_fields = ('name', 'measurement_unit',)
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoppingCart
+        fields = '__all__'
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = ('author')
