@@ -56,3 +56,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('__all__')
+
+
+class RecipeFollowSerializer(serializers.ModelSerializer):
+    ''' Сериализатор модели рецепта при выводе подписок. '''
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')

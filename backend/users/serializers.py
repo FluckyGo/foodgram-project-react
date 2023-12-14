@@ -22,7 +22,7 @@ class CustomUserReadSerializer(serializers.ModelSerializer):
         """ Фукция для проверки наличия подписок. """
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return Follow.objects.filter(user=user, author=obj).exists()
+            return Follow.objects.filter(user=user, following=obj).exists()
         return False
 
 
