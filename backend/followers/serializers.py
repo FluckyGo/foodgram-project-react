@@ -1,4 +1,3 @@
-
 from rest_framework import serializers, validators
 from django.contrib.auth import get_user_model
 from .models import Follow
@@ -30,17 +29,12 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def validate(self, data):
-        if data['user'] == data['following']:
-            raise serializers.ValidationError(
-                "Ты не можешь подписаться на самого себя.")
-        return data
-
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return Follow.objects.filter(user=user,
-                                         following=obj.following).exists()
+            return Follow.objects.filter(
+                user=user,
+                following=obj.following).exists()
         return False
 
     def get_recipes(self, obj):

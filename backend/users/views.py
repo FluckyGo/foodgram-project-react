@@ -61,22 +61,25 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['post', 'delete'],
             detail=True,
-            permission_classes=(permissions.IsAuthenticated, ))
+            permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, pk=None):
-        following = get_object_or_404(User, pk=self.kwargs.get('pk'))
+
+        following = get_object_or_404(User, pk=pk)
 
         if request.method == 'POST':
-            if following == request.user:
+            if following == self.request.user:
                 return Response('Вы не можете подписаться на себя',
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            if not Follow.objects.filter(user=request.user,
+            if not Follow.objects.filter(user=self.request.user,
                                          following=following).exists():
-                Follow.objects.create(user=request.user, following=following)
+                instance = Follow.objects.create(
+                    user=request.user, following=following)
                 serializer = FollowSerializer(
-                    following, context={'request': request})
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
+                    instance, context={'request': request})
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED)
             else:
                 return Response('Вы уже подписаны',
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -91,3 +94,5 @@ class UserViewSet(viewsets.ModelViewSet):
 
                 return Response('Подписка отменена',
                                 status=status.HTTP_204_NO_CONTENT)
+            return Response('Вы пытаетесь отписаться от себя или'
+                            ' от пользователя на которого ещё не подписаны!')

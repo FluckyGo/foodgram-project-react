@@ -10,7 +10,7 @@ admin.site.empty_value_display = '-пусто-'
 class CustomUserAdmin(UserAdmin):
     """Админ-зона пользователей Django"""
     form = CustomUserChangeForm
-    list_display = ('username', 'email', 'first_name',
+    list_display = ('id', 'username', 'email', 'first_name',
                     'last_name', 'role', 'admin_status', 'is_active',)
     search_fields = ('username', 'email', 'is_active',)
     list_filter = ('username', 'email', 'is_active',)
