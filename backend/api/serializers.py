@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
 from recipes.models import (Tag, Ingredient, Recipe,
                             RecipeIngredient, Favorite, ShoppingCart)
+from users.serializers import CustomUserReadSerializer
 
 User = get_user_model()
 
@@ -34,22 +35,30 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('ingredient', 'amount')
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Favorite
-        fields = '__all__'
-
-
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ShoppingCart
-        fields = '__all__'
-
-
 class RecipeReadSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(read_only=True, many=True)
+    ingredients = IngredientSerializer(read_only=True, many=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    author = CustomUserReadSerializer(read_only=True)
+
     class Meta:
         model = Recipe
-        fields = ('__all__')
+        fields = (
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time')
+
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        if not user.is_anonymous:
+            return Favorite.objects.filter(recipe=obj).exists()
+        return False
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if not user.is_anonymous:
+            return ShoppingCart.objects.filter(recipe=obj).exists()
+        return False
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -63,4 +72,28 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
+    name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
+    image = serializers.ImageField(source='recipe.image', read_only=True)
+    cooking_time = serializers.IntegerField(
+        source='recipe.cooking_time', read_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
+    name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
+    image = serializers.ImageField(source='recipe.image', read_only=True)
+    cooking_time = serializers.IntegerField(
+        source='recipe.cooking_time', read_only=True)
+
+    class Meta:
+        model = ShoppingCart
         fields = ('id', 'name', 'image', 'cooking_time')
