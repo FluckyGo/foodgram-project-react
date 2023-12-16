@@ -2,13 +2,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           ShoppingCartSerializer, FavoriteSerializer)
 from .pagination import FoodgramPagination
-from .filters import IngredientSearchFilter
+from .filters import RecipeFilter
 from recipes.models import Tag, Recipe, Ingredient, ShoppingCart, Favorite
 
 User = get_user_model()
@@ -23,14 +24,18 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (IngredientSearchFilter, )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     permission_classes = (permissions.AllowAny,)
     search_fields = ('^name',)
+    search_param = 'name'
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = FoodgramPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
+    # filterset_fields = ('author', 'tags',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
