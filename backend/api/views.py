@@ -9,7 +9,7 @@ from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           ShoppingCartSerializer, FavoriteSerializer)
 from .pagination import FoodgramPagination
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from recipes.models import Tag, Recipe, Ingredient, ShoppingCart, Favorite
 
 User = get_user_model()
@@ -24,10 +24,9 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (IngredientFilter, )
     permission_classes = (permissions.AllowAny,)
     search_fields = ('^name',)
-    search_param = 'name'
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

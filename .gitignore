@@ -135,3 +135,4 @@ backend/followers/migrations/
 backend/users/migrations/
 backend/db copy.sqlite3
 backend/media/
+backend/db copy 2.sqlite3

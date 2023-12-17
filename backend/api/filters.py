@@ -1,6 +1,9 @@
 from django_filters import rest_framework as filters
+from rest_framework import filters as rest_filters
 from django.contrib.auth import get_user_model
-from recipes.models import Recipe, Tag
+
+
+from recipes.models import Recipe, Tag, Ingredient
 
 User = get_user_model()
 
@@ -34,3 +37,8 @@ class RecipeFilter(filters.FilterSet):
         if user.is_authenticated and value:
             return queryset.filter(shoppingcart__customer=user)
         return queryset
+
+
+class IngredientFilter(rest_filters.SearchFilter):
+    """ Фильтр для поиска ингридиентов. """
+    search_param = 'name'

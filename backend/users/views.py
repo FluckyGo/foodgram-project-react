@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .models import CustomUser
@@ -32,7 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         """ Получение профиля текущего пользователя. """
         instance = self.request.user
-        serializer = self.get_serializer(instance)
+        serializer = CustomUserReadSerializer(instance)
         return Response(serializer.data)
 
     @action(methods=['post'],
@@ -41,12 +41,18 @@ class UserViewSet(viewsets.ModelViewSet):
             )
     def set_password(self, request):
         """ Смена пароля текущего пользователя. """
+        current_password = self.request.data.get('current_password')
         new_password = self.request.data.get('new_password')
+
+        if not check_password(current_password, request.user.password):
+            return Response('Не верно указан текущий пароль.',
+                            status=status.HTTP_400_BAD_REQUEST)
 
         request.user.password = make_password(new_password)
         request.user.save()
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response('Пароль успешно изменен.',
+                        status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['get'],
             detail=False,
