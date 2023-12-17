@@ -1,16 +1,23 @@
-from django.shortcuts import get_object_or_404
+import os
 from rest_framework import viewsets, mixins, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
+from django.utils.text import slugify
+from django.forms.models import model_to_dict
+from fpdf import FPDF
+
+from foodgram import settings
 
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           ShoppingCartSerializer, FavoriteSerializer)
 from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
-from recipes.models import Tag, Recipe, Ingredient, ShoppingCart, Favorite
+from recipes.models import RecipeIngredient, Tag, Recipe, Ingredient, ShoppingCart, Favorite
 
 User = get_user_model()
 
@@ -114,4 +121,47 @@ class RecipeViewSet(viewsets.ModelViewSet):
             methods=['get'],
             permission_classes=[permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-        ...
+        user = request.user
+        shopping_cart_items = ShoppingCart.objects.filter(customer=user)
+
+        if not shopping_cart_items.exists():
+            return Response('Корзина пуста.', status=status.HTTP_200_OK)
+
+        pdf = FPDF()
+        pdf.add_page()
+        font_path = 'backend/foodgram/Roboto-Light.ttf'
+        pdf.add_font('Roboto', '', font_path)
+        pdf.set_font('Roboto', size=12)
+
+        ingredients_dict = {}
+
+        for item in shopping_cart_items:
+            recipe = item.recipe
+            recipe_ingredients = RecipeIngredient.objects.filter(recipe=recipe)
+
+            for recipe_ingredient in recipe_ingredients:
+                ingredient = recipe_ingredient.ingredient
+                ingredient_name = ingredient.name
+                amount = recipe_ingredient.amount
+
+                if ingredient_name in ingredients_dict:
+                    ingredients_dict[ingredient_name] += amount
+                else:
+                    ingredients_dict[ingredient_name] = amount
+
+        for ingredient_name, amount in ingredients_dict.items():
+            pdf.cell(
+                200, 10, txt=f'{ingredient_name} ({amount} {recipe_ingredient.ingredient.measurement_unit})', ln=True, align='L')
+
+        pdf_filename = f"shopping_cart_{slugify(user.username)}.pdf"
+        pdf_path = os.path.join(settings.MEDIA_ROOT, pdf_filename)
+        pdf.output(pdf_path)
+
+        with open(pdf_path, 'rb') as file:
+            response = HttpResponse(
+                file.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+
+        os.remove(pdf_path)
+
+        return response
