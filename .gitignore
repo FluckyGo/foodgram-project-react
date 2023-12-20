@@ -136,3 +136,4 @@ backend/users/migrations/
 backend/db copy.sqlite3
 backend/media/
 backend/db copy 2.sqlite3
+backend/recipes/migrations/0001_initial.py

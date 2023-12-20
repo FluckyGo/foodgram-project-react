@@ -1,6 +1,8 @@
 
+import base64
 from rest_framework import serializers, status, validators
 from rest_framework.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
 from recipes.models import (Tag, Ingredient, Recipe,
@@ -61,10 +63,46 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return False
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
+
+
 class RecipeWriteSerializer(serializers.ModelSerializer):
+    ingredients = RecipeIngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True)
+    image = Base64ImageField()
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Recipe
-        fields = ('__all__')
+        fields = ('ingredients', 'tags', 'image',
+                  'name', 'text', 'cooking_time', 'author')
+
+    def create(self, validated_data):
+
+        ingredients_data = validated_data.pop('ingredients', [])
+        tags_data = validated_data.pop('tags', [])
+
+        recipe = Recipe.objects.create(**validated_data)
+
+        for ingredient in ingredients_data:
+            RecipeIngredient.objects.create(
+                ingredient=ingredient['ingredient'], recipe=recipe)
+
+        recipe.tags.set(tags_data)
+
+        return recipe
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):
