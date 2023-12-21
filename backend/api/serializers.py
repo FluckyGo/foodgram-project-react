@@ -51,14 +51,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        if not user.is_anonymous:
+        request = self.context.get('request')
+        if request and not request.user.is_anonymous:
             return Favorite.objects.filter(recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
-        if not user.is_anonymous:
+        request = self.context.get('request')
+        if request and not request.user.is_anonymous:
             return ShoppingCart.objects.filter(recipe=obj).exists()
         return False
 
@@ -119,13 +119,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['tags'] = TagSerializer(
-            instance.tags.all(), many=True).data
-        representation['ingredients'] = RecipeIngredientSerializer(
-            instance.ingredients_recipe.all(), many=True).data
-        representation['author'] = CustomUserReadSerializer(
-            instance.author).data
+        representation = RecipeReadSerializer(instance).data
         return representation
 
 
