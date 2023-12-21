@@ -85,7 +85,9 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     """ Ингридиенты для использования в рецепте. """
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, verbose_name='Название рецепта')
+        Recipe, on_delete=models.CASCADE,
+        verbose_name='Название рецепта',
+        related_name='ingredients_recipe')
     ingredient = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE,
         verbose_name='Ингредиент рецепта')

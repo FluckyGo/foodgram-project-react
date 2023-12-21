@@ -73,8 +73,19 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class AddRecipeIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all())
+
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
+
+
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientSerializer(many=True)
+    ingredients = AddRecipeIngredientSerializer(many=True, write_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     image = Base64ImageField()
@@ -95,7 +106,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
         for ingredient in ingredients_data:
             RecipeIngredient.objects.create(
-                ingredient=ingredient['ingredient'], recipe=recipe)
+                recipe=recipe,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount'],
+            )
 
         recipe.tags.set(tags_data)
 
@@ -103,6 +117,16 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['tags'] = TagSerializer(
+            instance.tags.all(), many=True).data
+        representation['ingredients'] = RecipeIngredientSerializer(
+            instance.ingredients_recipe.all(), many=True).data
+        representation['author'] = CustomUserReadSerializer(
+            instance.author).data
+        return representation
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ from rest_framework import filters as rest_filters
 from django.contrib.auth import get_user_model
 
 
-from recipes.models import Recipe, Tag, Ingredient
+from recipes.models import Recipe, Tag
 
 User = get_user_model()
 
