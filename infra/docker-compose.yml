@@ -10,13 +10,13 @@ services:
 
   frontend:
     build:
-      context: ./frontend/
+      context: ../frontend/
       dockerfile: Dockerfile
     volumes:
       - ./frontend/:/app/result_build/
 
   backend:
-    build: ./backend/    
+    build: ../backend/    
     volumes:
       - static:/backend_static
       - media:/app/media

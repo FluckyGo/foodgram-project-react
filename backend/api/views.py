@@ -125,11 +125,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if pdf_path is None:
             return Response('Корзина пуста.', status=status.HTTP_200_OK)
 
-        pdf_filename = f"shopping_cart_{slugify(user.username)}.pdf"
+        pdf_filename = f"shopping_cart_{slugify(user.username)}.txt"
 
         with open(pdf_path, 'rb') as file:
             response = HttpResponse(
-                file.read(), content_type='application/pdf')
+                file.read(), content_type='text/plain')
             response['Content-Disposition'] = (
                 f'attachment; filename="{pdf_filename}"')
 

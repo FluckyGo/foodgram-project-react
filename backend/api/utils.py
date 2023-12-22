@@ -1,22 +1,9 @@
 import os
-import requests
+
 from django.utils.text import slugify
-from fpdf import FPDF
 
 from recipes.models import ShoppingCart, RecipeIngredient
 from foodgram import settings
-
-font_url = 'https://disk.yandex.ru/d/ml5YeIGjanUzSA'
-
-
-def download_font(url=''):
-    try:
-        response = requests.get(url=url)
-
-        with open('Roboto.ttf', 'wb') as file:
-            file.write(response.content)
-    except Exception as _ex:
-        return ('Oopss... Check Url pls', _ex)
 
 
 def download_recipe(self, request):
@@ -27,14 +14,6 @@ def download_recipe(self, request):
 
     if not shopping_cart_items.exists():
         return None
-
-    pdf = FPDF()
-    pdf.add_page()
-
-    font_path = download_font(url=font_url)
-
-    pdf.add_font('Roboto', '', 'backend/Roboto.ttf')
-    pdf.set_font('Roboto', size=12)
 
     ingredients_dict = {}
 
@@ -52,14 +31,15 @@ def download_recipe(self, request):
             else:
                 ingredients_dict[ingredient_name] = amount
 
+    txt_content = ''
     for ingredient_name, amount in ingredients_dict.items():
-        pdf.cell(
-            200, 10, txt=f'({ingredient_name} ({amount} '
-            '{recipe_ingredient.ingredient.measurement_unit}))',
-            ln=True, align='L')
+        txt_content += f'({ingredient_name} ({amount} ' \
+                       f'{recipe_ingredient.ingredient.measurement_unit}))\n'
 
-    pdf_filename = f"shopping_cart_{slugify(user.username)}.pdf"
-    pdf_path = os.path.join(settings.MEDIA_ROOT, pdf_filename)
-    pdf.output(pdf_path)
+    txt_filename = f"shopping_cart_{slugify(user.username)}.txt"
+    txt_path = os.path.join(settings.MEDIA_ROOT, txt_filename)
 
-    return pdf_path
+    with open(txt_path, 'w', encoding='utf-8') as txt_file:
+        txt_file.write(txt_content)
+
+    return txt_path
