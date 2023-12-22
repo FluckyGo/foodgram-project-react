@@ -8,6 +8,7 @@ User = get_user_model()
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """ Сериализатор подписки. """
     email = serializers.ReadOnlyField(source='following.email')
     id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')

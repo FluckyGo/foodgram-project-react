@@ -1,7 +1,5 @@
 import os
 import requests
-from rest_framework import status
-from rest_framework.response import Response
 from django.utils.text import slugify
 from fpdf import FPDF
 
@@ -22,6 +20,8 @@ def download_font(url=''):
 
 
 def download_recipe(self, request):
+    """ Функция для скачивания списка покупок. """
+
     user = request.user
     shopping_cart_items = ShoppingCart.objects.filter(customer=user)
 
@@ -54,7 +54,9 @@ def download_recipe(self, request):
 
     for ingredient_name, amount in ingredients_dict.items():
         pdf.cell(
-            200, 10, txt=f'{ingredient_name} ({amount} {recipe_ingredient.ingredient.measurement_unit})', ln=True, align='L')
+            200, 10, txt=f'({ingredient_name} ({amount} '
+            '{recipe_ingredient.ingredient.measurement_unit}))',
+            ln=True, align='L')
 
     pdf_filename = f"shopping_cart_{slugify(user.username)}.pdf"
     pdf_path = os.path.join(settings.MEDIA_ROOT, pdf_filename)

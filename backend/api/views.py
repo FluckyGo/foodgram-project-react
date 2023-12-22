@@ -13,7 +13,7 @@ from .serializers import (TagSerializer, IngredientSerializer,
                           ShoppingCartSerializer, FavoriteSerializer)
 from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
-from recipes.models import (RecipeIngredient, Tag, Recipe,
+from recipes.models import (Tag, Recipe,
                             Ingredient, ShoppingCart, Favorite)
 from api.utils import download_recipe
 
@@ -39,7 +39,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    # filterset_fields = ('author', 'tags',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -131,7 +130,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         with open(pdf_path, 'rb') as file:
             response = HttpResponse(
                 file.read(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+            response['Content-Disposition'] = (
+                f'attachment; filename="{pdf_filename}"')
 
         os.remove(pdf_path)
 

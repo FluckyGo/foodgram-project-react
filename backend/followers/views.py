@@ -1,17 +1,16 @@
+from rest_framework import viewsets, permissions
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins, permissions, filters
-from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth import get_user_model
-from .serializers import FollowSerializer, TagSerializer, IngredientSerializer, RecipeSerializer
-from recipes.models import Tag, Recipe, Ingredient
+from .serializers import FollowSerializer
+
 
 User = get_user_model()
 
 
 class FollowViewSet(viewsets.ModelViewSet):
+    """ Вью для модели подписок. """
 
     serializer_class = FollowSerializer
-    # filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('user', 'following')
     search_fields = ('user__username', 'following__username')
     permission_classes = (permissions.IsAuthenticated,)

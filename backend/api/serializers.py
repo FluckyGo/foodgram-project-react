@@ -1,10 +1,10 @@
-
 import base64
-from rest_framework import serializers, status, validators
-from rest_framework.exceptions import ValidationError
+
+from rest_framework import serializers
+
 from django.core.files.base import ContentFile
-from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
+
 from recipes.models import (Tag, Ingredient, Recipe,
                             RecipeIngredient, Favorite, ShoppingCart)
 from users.serializers import CustomUserReadSerializer
@@ -30,16 +30,20 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     ''' Сериализатор для модели Рецепт-Ингредиент. '''
-    ingredient = IngredientSerializer(read_only=True)
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = RecipeIngredient
-        fields = ('ingredient', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientSerializer(read_only=True, many=True)
+    ingredients = RecipeIngredientSerializer(
+        read_only=True, many=True, source='recipe_ingredients')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     author = CustomUserReadSerializer(read_only=True)
