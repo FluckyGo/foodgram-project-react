@@ -13,6 +13,7 @@ from .serializers import (TagSerializer, IngredientSerializer,
                           ShoppingCartSerializer, FavoriteSerializer)
 from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
+from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly
 from recipes.models import (Tag, Recipe,
                             Ingredient, ShoppingCart, Favorite)
 from api.utils import download_recipe
@@ -23,14 +24,14 @@ User = get_user_model()
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filter_backends = (IngredientFilter, )
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdminUserOrReadOnly,)
     search_fields = ('^name',)
 
 
@@ -39,6 +40,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    permission_classes = (IsOwnerOrIsAdminOrReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
