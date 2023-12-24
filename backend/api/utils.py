@@ -33,13 +33,14 @@ def download_recipe(self, request):
 
     txt_content = ''
     for ingredient_name, amount in ingredients_dict.items():
-        txt_content += f'({ingredient_name} ({amount} ' \
-                       f'{recipe_ingredient.ingredient.measurement_unit}))\n'
+        txt_content += f'{ingredient_name.capitalize()} -- {amount} ' \
+                       f'{recipe_ingredient.ingredient.measurement_unit}.\n'
 
-    txt_filename = f"shopping_cart_{slugify(user.username)}.txt"
+    txt_filename = f'shopping_cart_{slugify(user.username)}.txt'
     txt_path = os.path.join(settings.MEDIA_ROOT, txt_filename)
 
     with open(txt_path, 'w', encoding='utf-8') as txt_file:
+        txt_file.write('Список ингредиентов для покупки:\n\n')
         txt_file.write(txt_content)
 
     return txt_path
