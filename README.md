@@ -119,4 +119,4 @@ sudo systemctl status docker - Проверка статуса Docker
 
 
 ### _Бэк написал_:
-**(https://github.com/FluckyGo)**
+**https://github.com/FluckyGo**
