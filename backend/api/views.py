@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 
 from .serializers import (TagSerializer, IngredientSerializer,

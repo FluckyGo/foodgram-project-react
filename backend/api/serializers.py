@@ -132,9 +132,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         for data in ingredients:
             ingredient_name = data.get('name')
 
-            # if ingredient_name in unique_ingredients:
-            #     raise serializers.ValidationError('Ингредиент уже выбран.')
-
             if int(data['amount']) <= 0:
                 raise serializers.ValidationError(
                     'Количество должно быть больше 0.')
