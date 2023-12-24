@@ -42,5 +42,6 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/etc/nginx/html/static/
       - media:/media
+      
     ports:
       - "8000:80"
