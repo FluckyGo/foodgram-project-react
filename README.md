@@ -91,9 +91,9 @@ sudo docker compose exec backend python manage.py createsuperuser
 
 ```
 
-**_Проект доступен локально по адресу : http://localhost/_**
+**_Проект доступен локально по адресу : http://localhost:8000/_**
 
-**_Cпецификация API по адресу : http://localhost/api/docs/_**
+**_Cпецификация API по адресу : http://localhost:8000/api/docs/_**
 
 
 ### _Деплой проекта на сервере:_
