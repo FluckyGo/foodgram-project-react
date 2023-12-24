@@ -17,7 +17,7 @@ services:
   backend:
     depends_on:
       - db
-    build: ../backend/    
+    build: ./backend/    
     env_file: .env
     volumes:
       - static:/app/static
@@ -26,7 +26,7 @@ services:
   frontend:
     env_file: .env
     build:
-      context: ../frontend/
+      context: ./frontend/
       dockerfile: Dockerfile
     volumes:
       - ./frontend/:/app/result_build/
