@@ -17,21 +17,22 @@ services:
   backend:
     depends_on:
       - db
-    image: andrewkirov/foodgram_backend   
+    build: ../backend/  
     env_file: .env
     volumes:
-      - static:/app/static
+      - static:/backend_static
       - media:/app/media
 
   frontend:
     env_file: .env
-    image: andrewkirov/foodgram_frontend
+    build: ../frontend/
+    command: cp -r /app/build/. /frontend_static/
     volumes:
-      - ./frontend/:/app/result_build/
+      - static:/frontend_static
 
 
   gateway:
-    image: andrewkirov/foodgram_gateway
+    build: ../infra/
     env_file: .env
     depends_on:
       - backend
