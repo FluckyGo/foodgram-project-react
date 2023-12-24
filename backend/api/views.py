@@ -50,42 +50,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
             methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def shopping_cart(self, request, pk=None):
-
         recipe = Recipe.objects.filter(pk=pk).first()
 
         if not recipe:
-            return Response(
-                'Попытка добавить несуществующий рецепт в корзину.',
-                status=status.HTTP_400_BAD_REQUEST)
+            return Response('Рецепт не найден.',
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
+            cart_instance, created = ShoppingCart.objects.get_or_create(
+                customer=request.user, recipe=recipe)
 
-            if not ShoppingCart.objects.filter(customer=request.user,
-                                               recipe=recipe).exists():
-                instance = ShoppingCart.objects.create(
-                    customer=request.user, recipe=recipe)
+            if created:
                 serializer = ShoppingCartSerializer(
-                    instance, context={'request': request})
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED)
+                    cart_instance, context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
             else:
                 return Response('Рецепт уже в корзине.',
                                 status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-
-            cart_instance = ShoppingCart.objects.filter(
-                customer=request.user, recipe=recipe).exists()
-
-            if cart_instance:
-                ShoppingCart.objects.get(recipe=recipe).delete()
-
+            try:
+                cart_instance = ShoppingCart.objects.get(
+                    customer=request.user, recipe=recipe)
+                cart_instance.delete()
                 return Response('Рецепт удален из корзины.',
                                 status=status.HTTP_204_NO_CONTENT)
-            return Response('Вы пытаетесь удалить рецепт,'
-                            ' которого нет в корзине!',
-                            status=status.HTTP_400_BAD_REQUEST)
+            except ShoppingCart.DoesNotExist:
+                return Response('Рецепт не найден в корзине.',
+                                status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True,
             methods=['post', 'delete'],
