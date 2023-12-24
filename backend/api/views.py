@@ -1,22 +1,22 @@
 import os
 from datetime import datetime
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django.utils.text import slugify
+
+from api.utils import download_recipe
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from django.utils.text import slugify
+from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from .serializers import (TagSerializer, IngredientSerializer,
-                          RecipeReadSerializer, RecipeWriteSerializer,
-                          ShoppingCartSerializer, FavoriteSerializer)
+from .filters import IngredientFilter, RecipeFilter
 from .pagination import FoodgramPagination
-from .filters import RecipeFilter, IngredientFilter
 from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly
-from recipes.models import (Tag, Recipe,
-                            Ingredient, ShoppingCart, Favorite)
-from api.utils import download_recipe
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeReadSerializer, RecipeWriteSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 User = get_user_model()
 

@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+
 from .forms import CustomUserChangeForm
+from .models import CustomUser
 
 admin.site.empty_value_display = '-пусто-'
 

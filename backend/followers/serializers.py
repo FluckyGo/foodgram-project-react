@@ -1,8 +1,9 @@
-from rest_framework import serializers, validators
-from django.contrib.auth import get_user_model
-from .models import Follow
-from recipes.models import Recipe
 from api.serializers import RecipeFollowSerializer
+from django.contrib.auth import get_user_model
+from recipes.models import Recipe
+from rest_framework import serializers, validators
+
+from .models import Follow
 
 User = get_user_model()
 

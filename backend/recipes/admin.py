@@ -1,10 +1,9 @@
 from django.contrib import admin
-from .models import (Ingredient, Tag, Recipe,
-                     RecipeIngredient, ShoppingCart, Favorite)
-
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 
 admin.site.empty_value_display = '-пусто-'
 

@@ -1,8 +1,8 @@
-from rest_framework import viewsets, permissions
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from .serializers import FollowSerializer
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions, viewsets
 
+from .serializers import FollowSerializer
 
 User = get_user_model()
 

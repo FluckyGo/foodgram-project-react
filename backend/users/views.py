@@ -1,16 +1,16 @@
-from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django.contrib.auth.hashers import check_password
+from api.pagination import FoodgramPagination
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
+from followers.models import Follow
+from followers.serializers import FollowSerializer
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import CustomUser
 from .serializers import CustomUserReadSerializer, CustomUserWriteSerializer
-from followers.models import Follow
-from followers.serializers import FollowSerializer
-from api.pagination import FoodgramPagination
 
 User = get_user_model()
 

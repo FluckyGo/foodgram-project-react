@@ -1,9 +1,8 @@
 import os
 
 from django.utils.text import slugify
-
-from recipes.models import ShoppingCart, RecipeIngredient
 from foodgram import settings
+from recipes.models import RecipeIngredient, ShoppingCart
 
 
 def download_recipe(self, request):

@@ -1,9 +1,10 @@
+from django.contrib.auth.hashers import make_password
+from django.core.validators import RegexValidator
+from followers.models import Follow
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
-from django.core.validators import RegexValidator
-from django.contrib.auth.hashers import make_password
+
 from .models import CustomUser
-from followers.models import Follow
 
 USERNAME_REGEX = r'^[\w.@+-]+$'
 EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
