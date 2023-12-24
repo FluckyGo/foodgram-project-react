@@ -72,3 +72,8 @@ class CustomUserWriteSerializer(serializers.ModelSerializer):
         user.password = make_password(validated_data['password'])
         user.save()
         return user
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)

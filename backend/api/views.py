@@ -3,9 +3,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 
 from .serializers import (TagSerializer, IngredientSerializer,
@@ -52,7 +52,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=[permissions.IsAuthenticated])
     def shopping_cart(self, request, pk=None):
 
-        recipe = get_object_or_404(Recipe, pk=pk)
+        recipe = Recipe.objects.filter(pk=pk).first()
+
+        if not recipe:
+            return Response(
+                'Попытка добавить несуществующий рецепт в корзину.',
+                status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
 
@@ -66,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     serializer.data,
                     status=status.HTTP_201_CREATED)
             else:
-                return Response('Рецепт уже в корине.',
+                return Response('Рецепт уже в корзине.',
                                 status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
@@ -80,13 +85,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response('Рецепт удален из корзины.',
                                 status=status.HTTP_204_NO_CONTENT)
             return Response('Вы пытаетесь удалить рецепт,'
-                            ' которого нет в корзине!')
+                            ' которого нет в корзине!',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True,
             methods=['post', 'delete'],
             permission_classes=[permissions.IsAuthenticated])
     def favorite(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, pk=pk)
+        recipe = Recipe.objects.filter(pk=pk).first()
+
+        if not recipe:
+            return Response(
+                'Попытка добавить несуществующий рецепт в избранное.',
+                status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
 
@@ -114,7 +125,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response('Рецепт удален из избранного.',
                                 status=status.HTTP_204_NO_CONTENT)
             return Response('Вы пытаетесь удалить рецепт,'
-                            ' которого нет в избранном!')
+                            ' которого нет в избранном!',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False,
             methods=['get'],

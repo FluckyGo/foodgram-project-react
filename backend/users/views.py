@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from djoser.serializers import SetPasswordSerializer
+
 from .models import CustomUser
-from .serializers import CustomUserReadSerializer, CustomUserWriteSerializer
+from .serializers import CustomUserReadSerializer, CustomUserWriteSerializer, PasswordChangeSerializer
 from followers.models import Follow
 from followers.serializers import FollowSerializer
 from api.pagination import FoodgramPagination
@@ -41,18 +43,37 @@ class UserViewSet(viewsets.ModelViewSet):
             )
     def set_password(self, request):
         """ Смена пароля текущего пользователя. """
-        current_password = self.request.data.get('current_password')
-        new_password = self.request.data.get('new_password')
+        serializer = SetPasswordSerializer(
+            data=request.data, context={'request': request})
 
-        if not check_password(current_password, request.user.password):
-            return Response('Не верно указан текущий пароль.',
+        if not serializer.is_valid():
+            return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        request.user.password = make_password(new_password)
+        current_password = serializer.validated_data['current_password']
+        new_password = serializer.validated_data['new_password']
+
+        if not check_password(current_password, request.user.password):
+            return Response({'detail': 'Не верно указан текущий пароль.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.set_password(new_password)
         request.user.save()
 
-        return Response('Пароль успешно изменен.',
+        return Response({'detail': 'Пароль успешно изменен.'},
                         status=status.HTTP_204_NO_CONTENT)
+        # current_password = self.request.data.get('current_password')
+        # new_password = self.request.data.get('new_password')
+
+        # if not check_password(current_password, request.user.password):
+        #     return Response('Не верно указан текущий пароль.',
+        #                     status=status.HTTP_400_BAD_REQUEST)
+
+        # request.user.password = make_password(new_password)
+        # request.user.save()
+
+        # return Response('Пароль успешно изменен.',
+        #                 status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['get'],
             detail=False,
@@ -101,4 +122,5 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response('Подписка отменена',
                                 status=status.HTTP_204_NO_CONTENT)
             return Response('Вы пытаетесь отписаться от себя или'
-                            ' от пользователя на которого ещё не подписаны!')
+                            ' от пользователя на которого ещё не подписаны!',
+                            status=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,6 @@
 import base64
 
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
@@ -101,6 +101,48 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = ('ingredients', 'tags', 'image',
                   'name', 'text', 'cooking_time', 'author')
 
+    def validate(self, data):
+        cooking_time = data.get('cooking_time')
+
+        if cooking_time is not None and cooking_time < 1:
+            raise serializers.ValidationError(
+                'Время готовки должно быть больше или равно 1.')
+
+        return data
+
+    def validate_tags(self, value):
+        tags = value
+
+        if not tags:
+            raise exceptions.ValidationError('Тэг не выбран.')
+
+        if len(set(tags)) != len(tags):
+            raise serializers.ValidationError('Тэги не должны повторяться.')
+
+        return value
+
+    def validate_ingredients(self, value):
+        ingredients = value
+
+        if not ingredients:
+            raise exceptions.ValidationError('Ингредиенты не выбраны.')
+
+        unique_ingredients = set()
+
+        for data in ingredients:
+            ingredient_name = data.get('name')
+
+            # if ingredient_name in unique_ingredients:
+            #     raise serializers.ValidationError('Ингредиент уже выбран.')
+
+            if int(data['amount']) <= 0:
+                raise serializers.ValidationError(
+                    'Количество должно быть больше 0.')
+
+            unique_ingredients.add(ingredient_name)
+
+        return value
+
     def create(self, validated_data):
 
         ingredients_data = validated_data.pop('ingredients', [])
@@ -120,8 +162,16 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
+        ingredients_data = validated_data.pop('ingredients', [])
+        tags_data = validated_data.pop('tags', [])
+
+        if not ingredients_data:
+            raise serializers.ValidationError(
+                'Поле ingredients обязательно при обновлении рецепта.')
+
+        if not tags_data:
+            raise serializers.ValidationError(
+                'Поле tags обязательно при обновлении рецепта.')
 
         instance.ingredients.clear()
         instance.tags.clear()

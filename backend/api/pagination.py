@@ -1,9 +1,7 @@
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 
 
-class FoodgramPagination(LimitOffsetPagination):
+class FoodgramPagination(PageNumberPagination):
     """ Пагинация для проекта Фудграм. """
-    default_limit = 6
-    limit_query_param = 'limit'
-    offset_query_param = 'offset'
-    max_limit = 30
+    page_size_query_param = 'limit'
+    page_size = 6
