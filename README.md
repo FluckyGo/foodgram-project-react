@@ -1,19 +1,18 @@
 # **_Foodgram_**
 Foodgram - это "Продуктовый помощник" - онлайн-сервис и соответствующее API. Этот сервис позволяет пользователям делиться своими рецептами, подписываться на публикации других пользователей, добавлять понравившиеся рецепты в закладки и загружать объединенный список ингредиентов, необходимых для приготовления выбранных блюд, перед походом в магазин.
 
-**_Ссылка на [Фудграм](foodgramforpeoples.sytes.net "Гиперссылка к проекту.")_**
+**_Ссылка на [Фудграм](## https://foodgramforpeoples.sytes.net "Гиперссылка к проекту.")_**
 
 **_Репозиторий проекта:_**
 ```
 git@github.com:FluckyGo/foodgram-project-react.git
 ```
 
-### После каждого обновления репозитория (push в ветку master) будет происходить:
+### После каждого обновления репозитория (push в ветку main) будет происходить:
 
-1. Проверка кода на соответствие стандарту PEP8 (с помощью пакета flake8)
-2. Сборка и доставка докер-образов frontend и backend на Docker Hub
-3. Разворачивание проекта на удаленном сервере
-4. Отправка сообщения в Telegram в случае успеха
+1. Проверка кода на соответствие стандарту PEP8 (с помощью пакета flake8 и Isort)
+2. Разворачивание проекта на удаленном сервере
+3. Отправка сообщения в Telegram в случае успеха
 
 **_Для работы с GitHub Actions необходимо в репозитории в разделе Secrets > Actions создать переменные окружения:_**
 ```
@@ -35,26 +34,6 @@ DB_HOST                 - db
 DB_PORT                 - 5432 (порт по умолчанию)
 ```
 
-**_Создать папку Foodgram на сервере:_**
-```
-mkdir foodgram && cd foodgram/
-```
-
-**_Создать папку .env на сервере:_**
-```
-touch .env
-```
-
-**_Копировать файлы из 'infra/' на локальном компьютере на сервер:_**
-```
-scp -i path_to_SSH/SSH_name docker-compose.production.yml \
-    username@server_ip:/home/username/foodgram/docker-compose.production.yml 
-```
-
-**_Запуск контейнера:_**
-```
-sudo docker-compose up -d
-```
 
 ### _Запуск проекта локально:_
 
@@ -81,9 +60,13 @@ cd infra/
 ```
 sudo docker compose up --build
 
+sudo docker compose exec backend python manage.py makemigrations
+
 sudo docker compose exec backend python manage.py migrate
 
 sudo docker compose exec backend python manage.py collectstatic
+
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app//backend_static/static/. /backend_static/static/
 
 sudo docker compose exec backend python manage.py loaddata ingredients.json
 
@@ -116,7 +99,27 @@ sudo apt install docker-compose-plugin - Скрипт установит Docker 
 sudo systemctl status docker - Проверка статуса Docker
 
 ```
+**_Создать папку Foodgram на сервере:_**
+```
+mkdir foodgram && cd foodgram/
+```
 
+**_Создать .env в папке Foodgram на сервере:_**
+```
+touch .env
+```
 
-### _Бэк написал_:
-**https://github.com/FluckyGo**
+**_Копировать файлы из 'infra/' на локальном компьютере на сервер:_**
+```
+scp -i path_to_SSH/SSH_name docker-compose.production.yml \
+    username@server_ip:/home/username/foodgram/docker-compose.production.yml 
+```
+**_Запустите Docker Compose с этой конфигурацией на своём компьютере:_**
+```
+sudo docker compose -f docker-compose.production.yml up
+```
+
+ 
+
+### *Бэк написал:*
+[FluckyGo](https://github.com/FluckyGo)

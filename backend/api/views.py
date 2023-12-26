@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 
 from api.utils import download_recipe
@@ -127,21 +126,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         user = request.user
 
-        pdf_path = download_recipe(self, request)
+        txt_content = download_recipe(self, request)
 
-        if pdf_path is None:
+        if txt_content is None:
             return Response('Корзина пуста.', status=status.HTTP_200_OK)
 
         date = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        pdf_filename = f'shopping_cart_{slugify(user.username)}_{date}.txt'
+        txt_filename = f'shopping_cart_{slugify(user.username)}_{date}.txt'
 
-        with open(pdf_path, 'rb') as file:
-            response = HttpResponse(
-                file.read(), content_type='text/plain')
-            response['Content-Disposition'] = (
-                f'attachment; filename="{pdf_filename}"')
-
-        os.remove(pdf_path)
+        response = HttpResponse(
+            txt_content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            f'attachment; filename="{txt_filename}"')
 
         return response
