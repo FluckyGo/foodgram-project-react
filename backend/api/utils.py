@@ -2,7 +2,7 @@ import os
 
 from django.utils.text import slugify
 from foodgram import settings
-from recipes.models import RecipeIngredient, ShoppingCart, Ingredient
+from recipes.models import Ingredient, RecipeIngredient, ShoppingCart
 
 
 def download_recipe(self, request):
