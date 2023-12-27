@@ -125,16 +125,20 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         if not ingredients:
             raise exceptions.ValidationError('Ингредиенты не выбраны.')
 
-        unique_ingredients = set()
+        unique_ingredient_ids = set()
 
         for data in ingredients:
-            ingredient_name = data.get('name')
+            ingredient_id = data.get('id')
 
             if int(data['amount']) <= 0:
                 raise serializers.ValidationError(
                     'Количество должно быть больше 0.')
 
-            unique_ingredients.add(ingredient_name)
+            if ingredient_id in unique_ingredient_ids:
+                raise serializers.ValidationError(
+                    'Ингредиенты не должны повторяться.')
+            else:
+                unique_ingredient_ids.add(ingredient_id)
 
         return value
 

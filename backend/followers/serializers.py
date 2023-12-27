@@ -7,6 +7,8 @@ from .models import Follow
 
 User = get_user_model()
 
+DEFAULT_LIMIT = 4
+
 
 class FollowSerializer(serializers.ModelSerializer):
     """ Сериализатор подписки. """
@@ -40,7 +42,9 @@ class FollowSerializer(serializers.ModelSerializer):
         return False
 
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(author=obj.following)
+        request = self.context.get('request')
+        limit = request.GET.get('recipes_limit', DEFAULT_LIMIT)
+        recipes = Recipe.objects.filter(author=obj.following)[:int(limit)]
         serializer = RecipeFollowSerializer(recipes, many=True)
         return serializer.data
 

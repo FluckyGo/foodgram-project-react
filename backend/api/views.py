@@ -52,11 +52,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         recipe = Recipe.objects.filter(pk=pk).first()
 
-        if not recipe:
-            return Response('Рецепт не найден.',
-                            status=status.HTTP_400_BAD_REQUEST)
-
         if request.method == 'POST':
+            if not recipe:
+                return Response('Рецепт не найден.',
+                                status=status.HTTP_400_BAD_REQUEST)
             cart_instance, created = ShoppingCart.objects.get_or_create(
                 customer=request.user, recipe=recipe)
 
@@ -70,6 +69,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
+            if not recipe:
+                return Response('Рецепт не найден.',
+                                status=status.HTTP_404_NOT_FOUND)
             try:
                 cart_instance = ShoppingCart.objects.get(
                     customer=request.user, recipe=recipe)
@@ -86,12 +88,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         recipe = Recipe.objects.filter(pk=pk).first()
 
-        if not recipe:
-            return Response(
-                'Попытка добавить несуществующий рецепт в избранное.',
-                status=status.HTTP_400_BAD_REQUEST)
-
         if request.method == 'POST':
+            if not recipe:
+                return Response(
+                    'Попытка добавить несуществующий рецепт в избранное.',
+                    status=status.HTTP_400_BAD_REQUEST)
 
             if not Favorite.objects.filter(customer=request.user,
                                            recipe=recipe).exists():
@@ -107,6 +108,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
+            if not recipe:
+                return Response('Рецепт не найден.',
+                                status=status.HTTP_404_NOT_FOUND)
 
             cart_instance = Favorite.objects.filter(
                 customer=request.user, recipe=recipe).exists()
