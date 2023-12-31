@@ -1,16 +1,7 @@
 from rest_framework import permissions
 
 
-class IsActiveUserPermission(permissions.BasePermission):
-    """ Класс доступа проверяет активен ли пользователь. """
-
-    def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or request.user.is_authenticated
-                and request.user.is_active)
-
-
-class IsAdminUserOrReadOnly(IsActiveUserPermission):
+class IsAdminUserOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     """ Класс доступа. Админ или только чтение. """
 
     def has_object_permission(self, request, view, obj):
@@ -20,7 +11,7 @@ class IsAdminUserOrReadOnly(IsActiveUserPermission):
                 and request.user.is_staff)
 
 
-class IsOwnerOrIsAdminOrReadOnly(IsActiveUserPermission):
+class IsOwnerOrIsAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     """ Класс доступа. Админ, автор или только чтение. """
 
     def has_object_permission(self, request, view, obj):
