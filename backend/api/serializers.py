@@ -85,12 +85,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'name', 'text', 'cooking_time', 'author')
 
     def validate(self, data):
-        cooking_time = data.get('cooking_time')
         image = data.get('image')
-
-        if cooking_time is not None and cooking_time < 1:
-            raise serializers.ValidationError(
-                'Время готовки должно быть больше или равно 1.')
 
         if not image:
             raise serializers.ValidationError(
