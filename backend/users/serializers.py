@@ -1,9 +1,9 @@
 from django.contrib.auth.hashers import make_password
 from django.core.validators import RegexValidator
-from followers.models import Follow
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 
+from followers.models import Follow
 from .models import CustomUser
 
 USERNAME_REGEX = r'^[\w.@+-]+$'

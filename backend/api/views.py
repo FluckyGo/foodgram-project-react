@@ -1,15 +1,15 @@
 from datetime import datetime
 
-from api.utils import download_recipe
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.utils.text import slugify
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from api.utils import download_recipe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import FoodgramPagination
 from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly

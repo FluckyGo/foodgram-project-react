@@ -1,6 +1,7 @@
 import os
 
 from django.utils.text import slugify
+
 from foodgram import settings
 from recipes.models import Ingredient, RecipeIngredient, ShoppingCart
 

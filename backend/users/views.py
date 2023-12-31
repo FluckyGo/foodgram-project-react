@@ -1,14 +1,14 @@
-from api.pagination import FoodgramPagination
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
-from followers.models import Follow
-from followers.serializers import FollowSerializer
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from followers.serializers import FollowSerializer
+from followers.models import Follow
+from api.pagination import FoodgramPagination
 from .models import CustomUser
 from .serializers import CustomUserReadSerializer, CustomUserWriteSerializer
 
