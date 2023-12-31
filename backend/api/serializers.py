@@ -1,8 +1,6 @@
-import base64
-
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from rest_framework import exceptions, serializers
+from drf_extra_fields.fields import Base64ImageField
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
@@ -16,7 +14,6 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug',)
-        read_only_fields = ('name', 'color', 'slug',)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -24,7 +21,6 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit',)
-        read_only_fields = ('id', 'name', 'measurement_unit',)
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -54,33 +50,21 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time')
 
     def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if request and not request.user.is_anonymous:
-            return Favorite.objects.filter(recipe=obj).exists()
-        return False
+        return bool(
+            self.context.get('request')
+            and self.context.get('request').user.is_authenticated
+            and Favorite.objects.filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        if request and not request.user.is_anonymous:
-            return ShoppingCart.objects.filter(recipe=obj).exists()
-        return False
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
+        return bool(
+            self.context.get('request')
+            and self.context.get('request').user.is_authenticated
+            and ShoppingCart.objects.filter(recipe=obj).exists())
 
 
 class AddRecipeIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all())
-
-    amount = serializers.IntegerField()
 
     class Meta:
         model = RecipeIngredient
@@ -102,10 +86,16 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         cooking_time = data.get('cooking_time')
+        image = data.get('image')
 
         if cooking_time is not None and cooking_time < 1:
             raise serializers.ValidationError(
                 'Время готовки должно быть больше или равно 1.')
+
+        if not image:
+            raise serializers.ValidationError(
+                'Проблема с картинкой, выбирите другую.'
+            )
 
         return data
 
