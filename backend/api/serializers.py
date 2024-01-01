@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import exceptions, serializers
 from drf_extra_fields.fields import Base64ImageField
 
@@ -86,39 +87,26 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         image = data.get('image')
+        tags = data.get('tags')
+        ingredients = data.get('ingredients')
 
         if not image:
             raise serializers.ValidationError(
                 'Проблема с картинкой, выбирите другую.'
             )
 
-        return data
-
-    def validate_tags(self, value):
-        tags = value
-
         if not tags:
             raise exceptions.ValidationError('Тэг не выбран.')
-
         if len(set(tags)) != len(tags):
             raise serializers.ValidationError('Тэги не должны повторяться.')
 
-        return value
-
-    def validate_ingredients(self, value):
-        ingredients = value
-
         if not ingredients:
-            raise exceptions.ValidationError('Ингредиенты не выбраны.')
+            raise serializers.ValidationError('Ингредиенты не выбраны.')
 
         unique_ingredient_ids = set()
 
-        for data in ingredients:
-            ingredient_id = data.get('id')
-
-            if int(data['amount']) <= 0:
-                raise serializers.ValidationError(
-                    'Количество должно быть больше 0.')
+        for ingredient_data in ingredients:
+            ingredient_id = ingredient_data.get('id')
 
             if ingredient_id in unique_ingredient_ids:
                 raise serializers.ValidationError(
@@ -126,57 +114,46 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             else:
                 unique_ingredient_ids.add(ingredient_id)
 
-        return value
+        return data
+
+    def safe_ingredients(self, recipe, ingredients_data):
+        RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount'],
+            )
+                for ingredient_data in ingredients_data
+            ])
 
     def create(self, validated_data):
 
         ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
 
-        recipe = Recipe.objects.create(**validated_data)
-
-        for ingredient in ingredients_data:
-            RecipeIngredient.objects.create(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount'],
-            )
-
-        recipe.tags.set(tags_data)
+        with transaction.atomic():
+            recipe = Recipe.objects.create(**validated_data)
+            self.safe_ingredients(recipe, ingredients_data)
+            recipe.tags.set(tags_data)
 
         return recipe
 
     def update(self, instance, validated_data):
+
         ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
 
-        if not ingredients_data:
-            raise serializers.ValidationError(
-                'Поле ingredients обязательно при обновлении рецепта.')
-
-        if not tags_data:
-            raise serializers.ValidationError(
-                'Поле tags обязательно при обновлении рецепта.')
-
-        instance.ingredients.clear()
-        instance.tags.clear()
-
-        instance = super().update(instance, validated_data)
-
-        for ingredient in ingredients_data:
-            RecipeIngredient.objects.update_or_create(
-                recipe=instance,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount'],
-            )
-
-        instance.tags.set(tags_data)
+        with transaction.atomic():
+            instance.ingredients.clear()
+            instance.tags.clear()
+            instance = super().update(instance, validated_data)
+            self.safe_ingredients(instance, ingredients_data)
+            instance.tags.set(tags_data)
 
         return instance
 
     def to_representation(self, instance):
-        representation = RecipeReadSerializer(instance).data
-        return representation
+        return RecipeReadSerializer(instance).data
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):

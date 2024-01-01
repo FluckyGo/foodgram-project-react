@@ -21,11 +21,13 @@ class CustomUserReadSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         """ Фукция для проверки наличия подписок. """
-        request = self.context.get('request')
-        if request and not request.user.is_anonymous:
-            return Follow.objects.filter(user=request.user,
-                                         following=obj).exists()
-        return False
+        return bool(
+            self.context.get('request')
+            and self.context.get('request').user.is_authenticated
+            and Follow.objects.filter(
+                user=self.context.get('request').user,
+                following=obj)
+            .exists())
 
 
 class CustomUserWriteSerializer(serializers.ModelSerializer):

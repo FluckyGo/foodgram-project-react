@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
+from djoser.views import UserViewSet as CustomUserViewset
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -25,6 +26,16 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return CustomUserReadSerializer
         return CustomUserWriteSerializer
+
+    # def get_serializer_class(self):
+    #     if self.action in ('list', 'retrieve'):
+    #         return CustomUserReadSerializer
+    #     return super().get_serializer_class()
+
+    # def get_permissions(self):
+    #     if self.action == 'me':
+    #         return (permissions.IsAuthenticated(),)
+    #     return super().get_permissions()
 
     @action(
         methods=['get'],
