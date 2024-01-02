@@ -164,7 +164,7 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
+class FavoriteReadSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
     name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
     image = serializers.ImageField(source='recipe.image', read_only=True)
@@ -176,7 +176,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
+class ShoppingCartReadSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
     name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
     image = serializers.ImageField(source='recipe.image', read_only=True)
@@ -186,3 +186,49 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('customer', 'recipe')
+
+    def validate(self, data):
+
+        recipe = Recipe.objects.filter(
+            pk=self.context.get('recipe_pk')).first()
+        request = self.context.get('request')
+
+        cart_instance = Favorite.objects.filter(
+            recipe=recipe, customer=request.user).first()
+
+        if cart_instance:
+            raise serializers.ValidationError('Рецепт уже в избранном.')
+        return data
+
+    def to_representation(self, instance):
+        return FavoriteReadSerializer(instance).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('customer', 'recipe')
+
+    def validate(self, data):
+
+        recipe = Recipe.objects.filter(
+            pk=self.context.get('recipe_pk')).first()
+        request = self.context.get('request')
+
+        cart_instance = ShoppingCart.objects.filter(
+            recipe=recipe, customer=request.user).first()
+
+        if cart_instance:
+            raise serializers.ValidationError('Рецепт уже в корзине.')
+        return data
+
+    def to_representation(self, instance):
+        return ShoppingCartReadSerializer(instance).data
