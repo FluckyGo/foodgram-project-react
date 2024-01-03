@@ -19,9 +19,12 @@ class Follow(models.Model):
         verbose_name='Подписан'
     )
 
-    def __str__(self):
-        return f'{self.user.username} подписан на {self.following.username}'
-
     class Meta:
         verbose_name = 'Подписчика'
         verbose_name_plural = 'Подписчики'
+
+    def __str__(self):
+        followed_user = User.objects.only('username').get(pk=self.following_id)
+        follower_user = User.objects.only('username').get(pk=self.user_id)
+
+        return f'{follower_user.username} подписан на {followed_user.username}'

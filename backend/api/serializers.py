@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from rest_framework import exceptions, serializers
+from rest_framework import exceptions, serializers, validators
 from drf_extra_fields.fields import Base64ImageField
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
+from followers.models import Follow
 from users.serializers import CustomUserReadSerializer
+from .constants import DEFAULT_FOLLOW_RECIPE_LIMIT
 
 User = get_user_model()
 
@@ -232,3 +234,56 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return ShoppingCartReadSerializer(instance).data
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    """ Сериализатор подписки. """
+    email = serializers.ReadOnlyField(source='following.email')
+    id = serializers.ReadOnlyField(source='following.id')
+    username = serializers.ReadOnlyField(source='following.username')
+    first_name = serializers.ReadOnlyField(source='following.first_name')
+    last_name = serializers.ReadOnlyField(source='following.last_name')
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Follow
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=['user', 'following']
+            )
+        ]
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return bool(
+            user.is_authenticated
+            and Follow.objects.filter(
+                user=user,
+                following=obj.following)
+            .exists())
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        limit = request.GET.get('recipes_limit', DEFAULT_FOLLOW_RECIPE_LIMIT)
+
+        try:
+            limit = int(limit)
+            if limit <= 0:
+                raise ValueError(
+                    "Значение 'recipes_limit' должно быть больше нуля.")
+
+        except ValueError as e:
+            return f'Ошибка: {e}'
+
+        recipes = Recipe.objects.filter(author=obj.following)[:limit]
+        serializer = RecipeFollowSerializer(recipes, many=True)
+        return serializer.data
+
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.following).count()

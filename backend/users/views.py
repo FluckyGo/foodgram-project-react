@@ -7,7 +7,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from followers.serializers import FollowSerializer
+from api.serializers import FollowSerializer
 from followers.models import Follow
 from api.pagination import FoodgramPagination
 from .models import CustomUser
