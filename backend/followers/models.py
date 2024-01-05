@@ -24,7 +24,6 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписчики'
 
     def __str__(self):
-        followed_user = User.objects.only('username').get(pk=self.following_id)
         follower_user = User.objects.only('username').get(pk=self.user_id)
-
-        return f'{follower_user.username} подписан на {followed_user.username}'
+        followed_user = User.objects.only('username').get(pk=self.following_id)
+        return f'{follower_user} подписан на {followed_user}'

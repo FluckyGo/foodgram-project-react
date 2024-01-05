@@ -8,8 +8,14 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 admin.site.empty_value_display = '-пусто-'
 
 
+class TagResource(resources.ModelResource):
+    """ Ресурс для экспорта и импорта тегов. """
+    class Meta:
+        model = Tag
+
+
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(ImportExportModelAdmin):
     """ Админ-зона тегов. """
     list_display = ('name', 'color', 'slug')
     search_fields = ('name', 'color', 'slug')
@@ -34,6 +40,7 @@ class IngredientAdmin(ImportExportModelAdmin):
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     extra = 3
+    min_num = 1
 
 
 @admin.register(Recipe)

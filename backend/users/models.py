@@ -1,18 +1,23 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api.constants import USER, ADMIN, USER_ROLES
+from api.constants import USER, ADMIN, USER_ROLES, MAX_USER_MODEL_FIELD_LENGTH
 
 
 class CustomUser(AbstractUser):
     """ Кастомная модель пользователя. """
     admin = ADMIN
 
-    username = models.CharField('Логин', max_length=150, unique=True)
-    password = models.CharField('Пароль', max_length=150)
-    email = models.EmailField('E-mail адрес', max_length=150, unique=True)
-    first_name = models.CharField('Имя', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
+    username = models.CharField(
+        'Логин', max_length=MAX_USER_MODEL_FIELD_LENGTH, unique=True)
+    password = models.CharField(
+        'Пароль', max_length=MAX_USER_MODEL_FIELD_LENGTH)
+    email = models.EmailField(
+        'E-mail адрес', max_length=MAX_USER_MODEL_FIELD_LENGTH, unique=True)
+    first_name = models.CharField(
+        'Имя', max_length=MAX_USER_MODEL_FIELD_LENGTH)
+    last_name = models.CharField(
+        'Фамилия', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     role = models.CharField(
         'Роль',
         max_length=50,
