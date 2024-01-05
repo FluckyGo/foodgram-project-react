@@ -1,7 +1,9 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import EmailValidator, RegexValidator
 
-from api.constants import USER, ADMIN, USER_ROLES, MAX_USER_MODEL_FIELD_LENGTH
+from api.constants import (USER, ADMIN, USER_ROLES,
+                           MAX_USER_MODEL_FIELD_LENGTH, USERNAME_REGEX)
 
 
 class CustomUser(AbstractUser):
@@ -9,11 +11,24 @@ class CustomUser(AbstractUser):
     admin = ADMIN
 
     username = models.CharField(
-        'Логин', max_length=MAX_USER_MODEL_FIELD_LENGTH, unique=True)
+        'Логин',
+        max_length=MAX_USER_MODEL_FIELD_LENGTH,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=USERNAME_REGEX,
+                message='Введите корретный юзернэйм.')
+        ])
+
     password = models.CharField(
         'Пароль', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     email = models.EmailField(
-        'E-mail адрес', max_length=MAX_USER_MODEL_FIELD_LENGTH, unique=True)
+        'E-mail адрес',
+        max_length=MAX_USER_MODEL_FIELD_LENGTH,
+        unique=True,
+        validators=[
+            EmailValidator('Введите корректный адрес.')
+        ])
     first_name = models.CharField(
         'Имя', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     last_name = models.CharField(
