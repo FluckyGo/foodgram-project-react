@@ -5,11 +5,30 @@ from drf_extra_fields.fields import Base64ImageField
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
-from followers.models import Follow
-from users.serializers import CustomUserReadSerializer
+from users.models import CustomUser, Follow
 from .constants import DEFAULT_FOLLOW_RECIPE_LIMIT
 
 User = get_user_model()
+
+
+class CustomUserReadSerializer(serializers.ModelSerializer):
+    """ Сериализатор для чтения данных о пользователе из БД.  """
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'username', 'first_name',
+                  'last_name', 'is_subscribed')
+
+    def get_is_subscribed(self, obj):
+        """ Фукция для проверки наличия подписок. """
+        return bool(
+            self.context.get('request')
+            and self.context.get('request').user.is_authenticated
+            and Follow.objects.filter(
+                user=self.context.get('request').user,
+                following=obj)
+            .exists())
 
 
 class TagSerializer(serializers.ModelSerializer):

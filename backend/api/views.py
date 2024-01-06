@@ -3,21 +3,98 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.utils.text import slugify
+from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet as DjoserUserViewset
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from users.models import Follow
 from api.utils import download_recipe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import FoodgramPagination
 from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
-                          ShoppingCartSerializer, TagSerializer)
+                          ShoppingCartSerializer, TagSerializer,
+                          CustomUserReadSerializer, FollowSerializer)
 
 User = get_user_model()
+
+
+class UserViewSet(DjoserUserViewset):
+    """ Вью пользователя и управления подписками. """
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    pagination_class = FoodgramPagination
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return CustomUserReadSerializer
+        return super().get_serializer_class()
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return (permissions.IsAuthenticated(),)
+        return super().get_permissions()
+
+    @action(methods=['get'],
+            detail=False,
+            permission_classes=(permissions.IsAuthenticated,))
+    def subscriptions(self, request):
+        """ Получение подписок пользователя. """
+        subscriptions = Follow.objects.filter(user=self.request.user)
+        page = self.paginate_queryset(subscriptions)
+        serializer = FollowSerializer(page,
+                                      many=True,
+                                      context={'request': self.request}
+                                      )
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=True,
+        permission_classes=(permissions.IsAuthenticated,))
+    def subscribe(self, request, id=None):
+        ...
+
+    @subscribe.mapping.post
+    def add_to_subscribers(self, request, id=None):
+
+        following = get_object_or_404(User, pk=id)
+
+        if following == self.request.user:
+            return Response('Вы не можете подписаться на себя',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not Follow.objects.filter(user=self.request.user,
+                                     following=following).exists():
+            instance = Follow.objects.create(
+                user=request.user, following=following)
+            serializer = FollowSerializer(
+                instance, context={'request': request})
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED)
+        else:
+            return Response('Вы уже подписаны',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    @subscribe.mapping.delete
+    def delete_from_subscribers(self, request, id=None):
+        following = get_object_or_404(User, pk=id)
+
+        follow_instance = Follow.objects.filter(
+            user=request.user, following=following).exists()
+
+        if follow_instance:
+            Follow.objects.get(following=following).delete()
+
+            return Response('Подписка отменена',
+                            status=status.HTTP_204_NO_CONTENT)
+        return Response('Вы пытаетесь отписаться от себя или'
+                        ' от пользователя на которого ещё не подписаны!',
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

@@ -29,10 +29,9 @@ INSTALLED_APPS = [
     'django_filters',
     'import_export',
     'colorfield',
+    'users.apps.UsersConfig',
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
-    'users.apps.UsersConfig',
-    'followers.apps.FollowersConfig',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +119,23 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+
+    'SERIALIZERS': {
+        'user': 'api.serializers.CustomUserReadSerializer',
+        'current_user': 'api.serializers.CustomUserReadSerializer',
+    },
+
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.AllowAny'],
+        'user': ['rest_framework.permissions.AllowAny'],
+
+    }
+
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

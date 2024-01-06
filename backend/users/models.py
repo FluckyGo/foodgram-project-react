@@ -57,3 +57,30 @@ class CustomUser(AbstractUser):
     @property
     def is_admin(self):
         return self.role == self.admin or self.is_staff
+
+
+class Follow(models.Model):
+    """ Модель подписок. """
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Пользователь',
+    )
+    following = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='followings',
+        verbose_name='Подписан'
+    )
+
+    class Meta:
+        verbose_name = 'Подписчика'
+        verbose_name_plural = 'Подписчики'
+
+    def __str__(self):
+        follower_user = CustomUser.objects.only(
+            'username').get(pk=self.user_id)
+        followed_user = CustomUser.objects.only(
+            'username').get(pk=self.following_id)
+        return f'{follower_user} подписан на {followed_user}'
