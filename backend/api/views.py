@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.utils.text import slugify
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewset
@@ -19,7 +19,7 @@ from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           ShoppingCartSerializer, TagSerializer,
-                          CustomUserReadSerializer, FollowSerializer)
+                          CustomUserReadSerializer, FollowSerializer, FollowReadSerializer)
 
 User = get_user_model()
 
@@ -28,6 +28,7 @@ class UserViewSet(DjoserUserViewset):
     """ Вью пользователя и управления подписками. """
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = FoodgramPagination
+    lookup_field = 'pk'
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -46,10 +47,10 @@ class UserViewSet(DjoserUserViewset):
         """ Получение подписок пользователя. """
         subscriptions = Follow.objects.filter(user=self.request.user)
         page = self.paginate_queryset(subscriptions)
-        serializer = FollowSerializer(page,
-                                      many=True,
-                                      context={'request': self.request}
-                                      )
+        serializer = FollowReadSerializer(page,
+                                          many=True,
+                                          context={'request': self.request}
+                                          )
         return self.get_paginated_response(serializer.data)
 
     @action(
@@ -59,42 +60,41 @@ class UserViewSet(DjoserUserViewset):
         ...
 
     @subscribe.mapping.post
-    def add_to_subscribers(self, request, id=None):
+    def add_to_subscribers(self, request, pk=None):
+        following = get_object_or_404(User, pk=pk)
 
-        following = get_object_or_404(User, pk=id)
+        data = {
+            'user': request.user.id,
+            'following': following.id,
+        }
 
-        if following == self.request.user:
-            return Response('Вы не можете подписаться на себя',
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = FollowSerializer(
+            data=data, context={'request': request})
 
-        if not Follow.objects.filter(user=self.request.user,
-                                     following=following).exists():
-            instance = Follow.objects.create(
-                user=request.user, following=following)
-            serializer = FollowSerializer(
-                instance, context={'request': request})
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED)
-        else:
-            return Response('Вы уже подписаны',
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
-    def delete_from_subscribers(self, request, id=None):
-        following = get_object_or_404(User, pk=id)
+    def delete_from_subscribers(self, request, pk=None):
+        following: Recipe | None = User.objects.filter(pk=pk).first()
 
-        follow_instance = Follow.objects.filter(
-            user=request.user, following=following).exists()
+        if not following:
+            return Response('Подписка не найдена.',
+                            status=status.HTTP_404_NOT_FOUND)
 
-        if follow_instance:
-            Follow.objects.get(following=following).delete()
+        delete_cnt, _ = Follow.objects.filter(
+            user=request.user, following=following).delete()
 
-            return Response('Подписка отменена',
+        if delete_cnt:
+            return Response('Подписка отменена.',
                             status=status.HTTP_204_NO_CONTENT)
-        return Response('Вы пытаетесь отписаться от себя или'
-                        ' от пользователя на которого ещё не подписаны!',
-                        status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response('Вы пытаетесь отписаться от себя или'
+                            ' от пользователя на которого ещё не подписаны!',
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -137,7 +137,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         }
 
         serializer = ShoppingCartSerializer(
-            data=data, context={'request': request, 'recipe_pk': pk})
+            data=data, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -177,7 +177,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         }
 
         serializer = FavoriteSerializer(
-            data=data, context={'request': request, 'recipe_pk': pk})
+            data=data, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

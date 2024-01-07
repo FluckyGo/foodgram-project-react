@@ -185,7 +185,7 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class FavoriteReadSerializer(serializers.ModelSerializer):
+class BaseFavoriteShoppingCartSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
     name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
     image = serializers.ImageField(source='recipe.image', read_only=True)
@@ -193,69 +193,33 @@ class FavoriteReadSerializer(serializers.ModelSerializer):
         source='recipe.cooking_time', read_only=True)
 
     class Meta:
-        model = Favorite
         fields = ('id', 'name', 'image', 'cooking_time')
 
+    def validate_item_existence(self, model, data, error_message):
+        request = self.context.get('request')
 
-class ShoppingCartReadSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
-    name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
-    image = serializers.ImageField(source='recipe.image', read_only=True)
-    cooking_time = serializers.IntegerField(
-        source='recipe.cooking_time', read_only=True)
+        item = Recipe.objects.filter(
+            pk=data.get('recipe').id).first()
 
-    class Meta:
-        model = ShoppingCart
-        fields = ('id', 'name', 'image', 'cooking_time')
+        cart_instance = model.objects.filter(
+            recipe=item, customer=request.user).first()
+
+        if cart_instance:
+            raise serializers.ValidationError(error_message)
+        return data
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-
-    class Meta:
+class FavoriteReadSerializer(BaseFavoriteShoppingCartSerializer):
+    class Meta(BaseFavoriteShoppingCartSerializer.Meta):
         model = Favorite
-        fields = ('customer', 'recipe')
-
-    def validate(self, data):
-
-        recipe = Recipe.objects.filter(
-            pk=self.context.get('recipe_pk')).first()
-        request = self.context.get('request')
-
-        cart_instance = Favorite.objects.filter(
-            recipe=recipe, customer=request.user).first()
-
-        if cart_instance:
-            raise serializers.ValidationError('Рецепт уже в избранном.')
-        return data
-
-    def to_representation(self, instance):
-        return FavoriteReadSerializer(instance).data
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
-
-    class Meta:
+class ShoppingCartReadSerializer(BaseFavoriteShoppingCartSerializer):
+    class Meta(BaseFavoriteShoppingCartSerializer.Meta):
         model = ShoppingCart
-        fields = ('customer', 'recipe')
-
-    def validate(self, data):
-
-        recipe = Recipe.objects.filter(
-            pk=self.context.get('recipe_pk')).first()
-        request = self.context.get('request')
-
-        cart_instance = ShoppingCart.objects.filter(
-            recipe=recipe, customer=request.user).first()
-
-        if cart_instance:
-            raise serializers.ValidationError('Рецепт уже в корзине.')
-        return data
-
-    def to_representation(self, instance):
-        return ShoppingCartReadSerializer(instance).data
 
 
-class FollowSerializer(serializers.ModelSerializer):
+class FollowReadSerializer(serializers.ModelSerializer):
     """ Сериализатор подписки. """
     email = serializers.ReadOnlyField(source='following.email')
     id = serializers.ReadOnlyField(source='following.id')
@@ -306,3 +270,65 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.following).count()
+
+
+class FavoriteSerializer(BaseFavoriteShoppingCartSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('customer', 'recipe')
+
+    def validate(self, data):
+        return self.validate_item_existence(
+            Favorite,
+            data,
+            'Рецепт уже в избранном.')
+
+    def to_representation(self, instance):
+        return FavoriteReadSerializer(instance).data
+
+
+class ShoppingCartSerializer(BaseFavoriteShoppingCartSerializer):
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('customer', 'recipe')
+
+    def validate(self, data):
+        return self.validate_item_existence(
+            ShoppingCart,
+            data,
+            'Рецепт уже в списке покупок.')
+
+    def to_representation(self, instance):
+        return ShoppingCartReadSerializer(instance).data
+
+
+class FollowSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Follow
+        fields = ('user', 'following')
+
+    def validate(self, data):
+        request = self.context.get('request')
+
+        following = User.objects.filter(
+            pk=data.get('following').id).first()
+
+        if following == request.user:
+            raise serializers.ValidationError(
+                'Вы не можете подписаться на себя.'
+            )
+
+        follow_instance = Follow.objects.filter(
+            user=request.user, following=following).first()
+
+        if follow_instance:
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
+
+        return data
+
+    def to_representation(self, instance):
+        return FollowReadSerializer(instance, context=self.context).data
