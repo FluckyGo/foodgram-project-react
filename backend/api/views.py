@@ -126,7 +126,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             methods=['get'],
             permission_classes=[permissions.IsAuthenticated])
     def download_shopping_cart(self, request):
-        user = request.user
 
         txt_content = download_recipe(self, request)
 
@@ -135,7 +134,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         date = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        txt_filename = f'shopping_cart_{slugify(user.username)}_{date}.txt'
+        txt_filename = (f'shopping_cart_'
+                        f'{slugify(request.user.username)}_{date}.txt')
 
         response = HttpResponse(
             txt_content, content_type='text/plain')
