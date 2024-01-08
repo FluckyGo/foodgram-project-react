@@ -8,29 +8,40 @@ User = get_user_model()
 
 
 class RecipeFilter(filters.FilterSet):
-    """ Фильтр рецептов. """
+    """ Фильтр для рецептов пользователя. """
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all()
     )
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
-    is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_is_in_shopping_cart')
+        method='filter_is_in_shopping_cart',
+        label='Is in shopping cart'
+    )
+    is_favorite = filters.BooleanFilter(
+        method='filter_is_favorite',
+        label='Is favorite'
+    )
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
-
-    def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated and value:
-            return queryset.filter(favorite__customer=user)
-        return queryset
+        fields = ('author', 'tags', 'is_in_shopping_cart', 'is_favorite')
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
-        if user.is_authenticated and value:
-            return queryset.filter(shopping_cart__customer=user)
+        if user.is_authenticated:
+            if value:
+                return queryset.filter(shopping_cart__customer=user)
+            else:
+                return queryset.exclude(shopping_cart__customer=user)
+        return queryset
+
+    def filter_is_favorite(self, queryset, name, value):
+        user = self.request.user
+        if user.is_authenticated:
+            if value:
+                return queryset.filter(favorite__customer=user)
+            else:
+                return queryset.exclude(favorite__customer=user)
         return queryset
 
 

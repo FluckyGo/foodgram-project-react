@@ -23,7 +23,7 @@ class Tag(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return self.name
+        return f'{self.name}'
 
 
 class Ingredient(models.Model):
@@ -143,7 +143,7 @@ class ShoppingCart(models.Model):
         ordering = ('customer',)
 
     def __str__(self) -> str:
-        return self.recipe
+        return f'{self.recipe}'
 
 
 class Favorite(models.Model):
@@ -165,4 +165,4 @@ class Favorite(models.Model):
         ordering = ('customer',)
 
     def __str__(self) -> str:
-        return self.recipe
+        return f'{self.recipe}'
