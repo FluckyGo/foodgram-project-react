@@ -121,10 +121,7 @@ class RecipeIngredient(models.Model):
         ordering = ('recipe',)
 
     def __str__(self) -> str:
-        return f'{self.ingredient_name} -- {self.amount}'
-
-    def ingredient_name(self):
-        return f'{self.ingredient} - {self.amount}'
+        return f'{self.ingredient} -- {self.amount}'
 
 
 class ShoppingCart(models.Model):
