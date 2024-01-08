@@ -123,17 +123,22 @@ class RecipeIngredient(models.Model):
     def __str__(self) -> str:
         return f'{self.ingredient_name} -- {self.amount}'
 
-    @property
     def ingredient_name(self):
-        return self.ingredient.name
+        return f'{self.ingredient} - {self.amount}'
 
 
 class ShoppingCart(models.Model):
     """ Модель списка покупок. """
     customer = models.ForeignKey(
-        User, verbose_name='Покупатель', on_delete=models.CASCADE)
+        User,
+        related_name='user_shopping_cart',
+        verbose_name='Покупатель',
+        on_delete=models.CASCADE)
     recipe = models.ForeignKey(
-        Recipe, verbose_name='Рецепт блюда', on_delete=models.CASCADE)
+        Recipe,
+        related_name='shopping_cart',
+        verbose_name='Рецепт блюда',
+        on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Список покупок'
@@ -141,15 +146,21 @@ class ShoppingCart(models.Model):
         ordering = ('customer',)
 
     def __str__(self) -> str:
-        return self.recipe.name
+        return self.recipe
 
 
 class Favorite(models.Model):
     """ Модель избранного. """
     customer = models.ForeignKey(
-        User, verbose_name='Покупатель', on_delete=models.CASCADE)
+        User,
+        related_name='user_favorites',
+        verbose_name='Покупатель',
+        on_delete=models.CASCADE)
     recipe = models.ForeignKey(
-        Recipe, verbose_name='Рецепт блюда', on_delete=models.CASCADE)
+        Recipe,
+        related_name='favorite',
+        verbose_name='Рецепт блюда',
+        on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Любимые рецепты'
@@ -157,4 +168,4 @@ class Favorite(models.Model):
         ordering = ('customer',)
 
     def __str__(self) -> str:
-        return self.recipe.name
+        return self.recipe
