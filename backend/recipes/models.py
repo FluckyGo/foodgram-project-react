@@ -128,12 +128,12 @@ class ShoppingCart(models.Model):
     """ Модель списка покупок. """
     customer = models.ForeignKey(
         User,
-        related_name='user_shopping_cart',
+        related_name='shoppingcart',
         verbose_name='Покупатель',
         on_delete=models.CASCADE)
     recipe = models.ForeignKey(
         Recipe,
-        related_name='shopping_cart',
+        related_name='shoppingcart',
         verbose_name='Рецепт блюда',
         on_delete=models.CASCADE)
 
@@ -150,7 +150,7 @@ class Favorite(models.Model):
     """ Модель избранного. """
     customer = models.ForeignKey(
         User,
-        related_name='user_favorites',
+        related_name='favorite',
         verbose_name='Покупатель',
         on_delete=models.CASCADE)
     recipe = models.ForeignKey(
