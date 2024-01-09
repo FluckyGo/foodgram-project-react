@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Follow
-from .utils import download_recipe, add_to_list, delete_from_list
+from .utils import download_recipe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import FoodgramPagination
 from .permissions import IsAdminUserOrReadOnly, IsOwnerOrIsAdminOrReadOnly
@@ -22,12 +22,10 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           CustomUserReadSerializer, FollowSerializer,
                           FollowReadSerializer)
 from .constants import (SHOPPING_CART_FAVORITE_SUCCESS_MESSAGE,
-                        SHOPPING_CART_NOT_FOUND_MESSAGE,
                         SHOPPING_CART_BAD_REQUEST_MESSAGE,
-                        FAVORITE_NOT_FOUND_MESSAGE,
                         FAVORITE_BAD_REQUEST_MESSAGE,
                         SUBSCRIBE_BAD_REQUEST_MESSAGE,
-                        SUBSCRIBE_NOT_FOUND_MESSAGE, SUBSCRIBE_SUCCESS_MESSAGE)
+                        SUBSCRIBE_SUCCESS_MESSAGE)
 
 User = get_user_model()
 
@@ -58,6 +56,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
+    def add_to_list(cls, serializer_class, model_class, data, request):
+        serializer = serializer_class(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete_from_list(cls, item_model_class, instance_model_class, request,
+                         pk=None,
+                         success_message='',
+                         bad_request_message=''):
+
+        item = get_object_or_404(item_model_class, pk=pk)
+
+        delete_cnt, _ = instance_model_class.objects.filter(
+            customer=request.user, recipe=item).delete()
+
+        if delete_cnt:
+            return Response(success_message, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(bad_request_message,
+                            status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True,
             permission_classes=[permissions.IsAuthenticated])
     def shopping_cart(self, request, pk=None):
@@ -71,7 +91,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'recipe': pk,
         }
 
-        return add_to_list(
+        return self.add_to_list(
             ShoppingCartSerializer,
             ShoppingCart,
             data,
@@ -80,13 +100,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @shopping_cart.mapping.delete
     def delete_from_shopping_cart(self, request, pk=None):
-        return delete_from_list(
+        return self.delete_from_list(
             Recipe,
             ShoppingCart,
             request,
             pk,
             SHOPPING_CART_FAVORITE_SUCCESS_MESSAGE,
-            SHOPPING_CART_NOT_FOUND_MESSAGE,
             SHOPPING_CART_BAD_REQUEST_MESSAGE
         )
 
@@ -103,7 +122,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'recipe': pk,
         }
 
-        return add_to_list(
+        return self.add_to_list(
             FavoriteSerializer,
             Favorite,
             data,
@@ -112,13 +131,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @favorite.mapping.delete
     def delete_from_favorite(self, request, pk=None):
-        return delete_from_list(
+        return self.delete_from_list(
             Recipe,
             Favorite,
             request,
             pk,
             SHOPPING_CART_FAVORITE_SUCCESS_MESSAGE,
-            FAVORITE_NOT_FOUND_MESSAGE,
             FAVORITE_BAD_REQUEST_MESSAGE
         )
 
@@ -182,6 +200,8 @@ class UserViewSet(DjoserUserViewset):
 
     @subscribe.mapping.post
     def add_to_subscribers(self, request, pk=None):
+        """ Функция добавляет пользователя в подписки. """
+
         following = get_object_or_404(User, pk=pk)
 
         data = {
@@ -189,22 +209,23 @@ class UserViewSet(DjoserUserViewset):
             'following': following.id,
         }
 
-        return add_to_list(
-            FollowSerializer,
-            Follow,
-            data,
-            request
-        )
+        serializer = FollowSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def delete_from_subscribers(self, request, pk=None):
+        """ Функция удаляет пользователя из подписок. """
 
-        return delete_from_list(
-            User,
-            Follow,
-            request,
-            pk,
-            SUBSCRIBE_SUCCESS_MESSAGE,
-            SUBSCRIBE_NOT_FOUND_MESSAGE,
-            SUBSCRIBE_BAD_REQUEST_MESSAGE
-        )
+        item = get_object_or_404(User, pk=pk)
+
+        delete_cnt, _ = Follow.objects.filter(
+            user=request.user, following=item).delete()
+
+        if delete_cnt:
+            return Response(SUBSCRIBE_SUCCESS_MESSAGE,
+                            status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(SUBSCRIBE_BAD_REQUEST_MESSAGE,
+                            status=status.HTTP_400_BAD_REQUEST)
