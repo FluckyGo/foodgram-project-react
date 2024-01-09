@@ -1,34 +1,31 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import EmailValidator, RegexValidator
+from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from api.constants import (USER, ADMIN, USER_ROLES,
-                           MAX_USER_MODEL_FIELD_LENGTH, USERNAME_REGEX)
+from api.constants import (USER, ADMIN, USER_ROLES, USERNAME_FIELD,
+                           MAX_USER_MODEL_FIELD_LENGTH, REQUIRED_FIELDS)
 
 
 class CustomUser(AbstractUser):
     """ Кастомная модель пользователя. """
     admin = ADMIN
+    USERNAME_FIELD = USERNAME_FIELD
+    REQUIRED_FIELDS = REQUIRED_FIELDS
 
     username = models.CharField(
         'Логин',
         max_length=MAX_USER_MODEL_FIELD_LENGTH,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=USERNAME_REGEX,
-                message='Введите корретный юзернэйм.')
-        ])
+        validators=[UnicodeUsernameValidator()]
+    )
 
     password = models.CharField(
         'Пароль', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     email = models.EmailField(
         'E-mail адрес',
-        max_length=MAX_USER_MODEL_FIELD_LENGTH,
-        unique=True,
-        validators=[
-            EmailValidator('Введите корректный адрес.')
-        ])
+        unique=True
+    )
+
     first_name = models.CharField(
         'Имя', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     last_name = models.CharField(
@@ -39,13 +36,6 @@ class CustomUser(AbstractUser):
         choices=USER_ROLES,
         default=USER
     )
-    is_active = models.BooleanField(
-        verbose_name="Активeн",
-        default=True,
-    )
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name', ]
 
     class Meta:
         verbose_name = 'Пользователь'

@@ -2,6 +2,8 @@ PAGINATION_PAGE_SIZE = 6
 
 USER = 'user'
 ADMIN = 'admin'
+USERNAME_FIELD = 'email'
+REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name', ]
 
 USER_ROLES = [
     (USER, 'user'),
