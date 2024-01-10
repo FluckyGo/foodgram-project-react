@@ -141,7 +141,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
         return data
 
-    def safe_ingredients(self, recipe, ingredients_data):
+    @staticmethod
+    def safe_ingredients(recipe, ingredients_data):
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
                 recipe=recipe,
@@ -151,29 +152,29 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 for ingredient_data in ingredients_data
             ])
 
+    @transaction.atomic
     def create(self, validated_data):
 
         ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
 
-        with transaction.atomic():
-            recipe = Recipe.objects.create(**validated_data)
-            self.safe_ingredients(recipe, ingredients_data)
-            recipe.tags.set(tags_data)
+        recipe = Recipe.objects.create(**validated_data)
+        self.safe_ingredients(recipe, ingredients_data)
+        recipe.tags.set(tags_data)
 
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
 
         ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
 
-        with transaction.atomic():
-            instance.ingredients.clear()
-            instance.tags.clear()
-            instance = super().update(instance, validated_data)
-            self.safe_ingredients(instance, ingredients_data)
-            instance.tags.set(tags_data)
+        instance.ingredients.clear()
+        instance.tags.clear()
+        instance = super().update(instance, validated_data)
+        self.safe_ingredients(instance, ingredients_data)
+        instance.tags.set(tags_data)
 
         return instance
 
@@ -190,54 +191,49 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
 
 class BaseFavoriteShoppingCartSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(source='recipe', read_only=True)
-    name = serializers.ReadOnlyField(source='recipe.name', read_only=True)
-    image = serializers.ImageField(source='recipe.image', read_only=True)
-    cooking_time = serializers.IntegerField(
-        source='recipe.cooking_time', read_only=True)
 
-    class Meta:
-        fields = ('id', 'name', 'image', 'cooking_time')
+    def validate(self, data, model=None, message=None):
 
-    def validate_item_existence(self, model, data, error_message):
         request = self.context.get('request')
 
-        item = Recipe.objects.filter(
-            pk=data.get('recipe').id).first()
-
-        cart_instance = model.objects.filter(
-            recipe=item, customer=request.user).first()
+        cart_instance = self.model.objects.filter(
+            recipe=data['recipe'], customer=request.user).first()
 
         if cart_instance:
-            raise serializers.ValidationError(error_message)
+            raise serializers.ValidationError(self.message)
         return data
 
+    def to_representation(self, instance):
+        return RecipeFollowSerializer(instance.recipe).data
 
-class FavoriteReadSerializer(BaseFavoriteShoppingCartSerializer):
-    class Meta(BaseFavoriteShoppingCartSerializer.Meta):
+
+class FavoriteSerializer(BaseFavoriteShoppingCartSerializer):
+    model = Favorite
+    message = 'Рецепт уже в избранном.'
+
+    class Meta:
         model = Favorite
+        fields = ('customer', 'recipe')
 
 
-class ShoppingCartReadSerializer(BaseFavoriteShoppingCartSerializer):
-    class Meta(BaseFavoriteShoppingCartSerializer.Meta):
+class ShoppingCartSerializer(BaseFavoriteShoppingCartSerializer):
+    model = ShoppingCart
+    message = 'Рецепт уже в списке покупок.'
+
+    class Meta:
         model = ShoppingCart
+        fields = ('customer', 'recipe')
 
 
-class FollowReadSerializer(serializers.ModelSerializer):
+class FollowReadSerializer(CustomUserReadSerializer):
     """ Сериализатор подписки. """
-    email = serializers.ReadOnlyField(source='following.email')
-    id = serializers.ReadOnlyField(source='following.id')
-    username = serializers.ReadOnlyField(source='following.username')
-    first_name = serializers.ReadOnlyField(source='following.first_name')
-    last_name = serializers.ReadOnlyField(source='following.last_name')
-    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Follow
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+    class Meta(CustomUserReadSerializer.Meta):
+        model = User
+        fields = CustomUserReadSerializer.Meta.fields + \
+            ('recipes', 'recipes_count')
 
         validators = [
             validators.UniqueTogetherValidator(
@@ -246,66 +242,24 @@ class FollowReadSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        return bool(
-            user.is_authenticated
-            and Follow.objects.filter(
-                user=user,
-                following=obj.following)
-            .exists())
-
     def get_recipes(self, obj):
         request = self.context.get('request')
         limit = request.GET.get('recipes_limit', DEFAULT_FOLLOW_RECIPE_LIMIT)
 
         try:
             limit = int(limit)
-            if limit <= 0:
-                raise ValueError(
-                    "Значение 'recipes_limit' должно быть больше нуля.")
+        except ValueError:
+            pass
 
-        except ValueError as e:
-            return f'Ошибка: {e}'
-
-        recipes = Recipe.objects.filter(author=obj.following)[:limit]
+        recipes = Recipe.objects.filter(author=obj)[:limit]
         serializer = RecipeFollowSerializer(recipes, many=True)
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.following).count()
-
-
-class FavoriteSerializer(BaseFavoriteShoppingCartSerializer):
-
-    class Meta:
-        model = Favorite
-        fields = ('customer', 'recipe')
-
-    def validate(self, data):
-        return self.validate_item_existence(
-            Favorite,
-            data,
-            'Рецепт уже в избранном.')
+        return Recipe.objects.filter(author=obj).count()
 
     def to_representation(self, instance):
-        return FavoriteReadSerializer(instance).data
-
-
-class ShoppingCartSerializer(BaseFavoriteShoppingCartSerializer):
-
-    class Meta:
-        model = ShoppingCart
-        fields = ('customer', 'recipe')
-
-    def validate(self, data):
-        return self.validate_item_existence(
-            ShoppingCart,
-            data,
-            'Рецепт уже в списке покупок.')
-
-    def to_representation(self, instance):
-        return ShoppingCartReadSerializer(instance).data
+        return super().to_representation(instance.following)
 
 
 class FollowSerializer(serializers.ModelSerializer):

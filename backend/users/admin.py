@@ -13,7 +13,7 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     list_display = ('id', 'username', 'email', 'first_name',
-                    'last_name', 'role', 'admin_status', 'is_active',)
+                    'last_name', 'admin_status', 'is_active',)
     search_fields = ('username', 'email', 'is_active',)
     list_filter = ('username', 'email', 'is_active',)
     list_editable = ('is_active',)
@@ -22,12 +22,12 @@ class CustomUserAdmin(UserAdmin):
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2', 'username',
-                       'first_name', 'last_name', 'role'),
+                       'first_name', 'last_name'),
         }),
     )
 
     def admin_status(self, obj):
-        return 'Админ' if obj.is_admin else 'Обычный юзер'
+        return 'Админ' if obj.is_staff else 'Обычный юзер'
     admin_status.short_description = 'Статус пользователя'
 
     def get_fieldsets(self, request, obj=None):

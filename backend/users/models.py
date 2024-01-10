@@ -2,13 +2,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
-from api.constants import (USER, ADMIN, USER_ROLES, USERNAME_FIELD,
-                           MAX_USER_MODEL_FIELD_LENGTH, REQUIRED_FIELDS)
+from api.constants import (USERNAME_FIELD, REQUIRED_FIELDS,
+                           MAX_USER_MODEL_FIELD_LENGTH)
 
 
 class CustomUser(AbstractUser):
     """ Кастомная модель пользователя. """
-    admin = ADMIN
+
     USERNAME_FIELD = USERNAME_FIELD
     REQUIRED_FIELDS = REQUIRED_FIELDS
 
@@ -21,6 +21,7 @@ class CustomUser(AbstractUser):
 
     password = models.CharField(
         'Пароль', max_length=MAX_USER_MODEL_FIELD_LENGTH)
+
     email = models.EmailField(
         'E-mail адрес',
         unique=True
@@ -30,12 +31,6 @@ class CustomUser(AbstractUser):
         'Имя', max_length=MAX_USER_MODEL_FIELD_LENGTH)
     last_name = models.CharField(
         'Фамилия', max_length=MAX_USER_MODEL_FIELD_LENGTH)
-    role = models.CharField(
-        'Роль',
-        max_length=50,
-        choices=USER_ROLES,
-        default=USER
-    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -43,10 +38,6 @@ class CustomUser(AbstractUser):
 
     def __str__(self) -> str:
         return self.username
-
-    @property
-    def is_admin(self):
-        return self.role == self.admin or self.is_staff
 
 
 class Follow(models.Model):

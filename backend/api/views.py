@@ -184,11 +184,11 @@ class UserViewSet(DjoserUserViewset):
             permission_classes=(permissions.IsAuthenticated,))
     def subscriptions(self, request):
         """ Получение подписок пользователя. """
-        subscriptions = Follow.objects.filter(user=self.request.user)
+        subscriptions = Follow.objects.filter(user=request.user)
         page = self.paginate_queryset(subscriptions)
         serializer = FollowReadSerializer(page,
                                           many=True,
-                                          context={'request': self.request}
+                                          context={'request': request}
                                           )
         return self.get_paginated_response(serializer.data)
 
