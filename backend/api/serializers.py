@@ -117,7 +117,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
         if not image:
             raise serializers.ValidationError(
-                'Проблема с картинкой, выбирите другую.'
+                'Необходимо выбрать изображение рецепта.'
             )
 
         if not tags:
