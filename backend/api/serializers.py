@@ -192,7 +192,7 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
 class BaseFavoriteShoppingCartSerializer(serializers.ModelSerializer):
 
-    def validate(self, data, model=None, message=None):
+    def validate(self, data):
 
         request = self.context.get('request')
 
@@ -232,8 +232,8 @@ class FollowReadSerializer(CustomUserReadSerializer):
 
     class Meta(CustomUserReadSerializer.Meta):
         model = User
-        fields = CustomUserReadSerializer.Meta.fields + \
-            ('recipes', 'recipes_count')
+        fields = (CustomUserReadSerializer.Meta.fields
+                  + ('recipes', 'recipes_count'))
 
         validators = [
             validators.UniqueTogetherValidator(

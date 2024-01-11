@@ -56,13 +56,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def add_to_list(cls, serializer_class, model_class, data, request):
+    @staticmethod
+    def add_to_list(serializer_class, data, request):
         serializer = serializer_class(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def delete_from_list(cls, item_model_class, instance_model_class, request,
+    @staticmethod
+    def delete_from_list(item_model_class, instance_model_class, request,
                          pk=None,
                          success_message='',
                          bad_request_message=''):
@@ -93,7 +95,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return self.add_to_list(
             ShoppingCartSerializer,
-            ShoppingCart,
             data,
             request
         )
@@ -124,7 +125,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return self.add_to_list(
             FavoriteSerializer,
-            Favorite,
             data,
             request
         )
