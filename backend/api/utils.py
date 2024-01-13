@@ -11,7 +11,7 @@ def download_recipe(self, request):
 
     ingredients_data = RecipeIngredient.objects.values(
         'ingredient__name', 'ingredient__measurement_unit'
-    ).annotate(total_ingredients=Sum('amount'))
+    ).annotate(total_ingredients=Sum('amount')).order_by('ingredient__name')
 
     txt_content = 'Список ингредиентов для покупки:\n\n'
 
